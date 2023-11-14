@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/joshmeranda/marina/pkg/apis"
+	"github.com/joshmeranda/marina/pkg/apis/terminal"
+	"github.com/joshmeranda/marina/pkg/client"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -13,20 +14,13 @@ import (
 
 var Version string
 
-func getClient(ctx *cli.Context) (apis.MarinaClient, error) {
+func getClient(ctx *cli.Context) (*client.Client, error) {
 	conn, err := grpc.Dial(ctx.String("address"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}
 
-	client := apis.NewMarinaClient(conn)
-
-	_, err = client.CreateTerminal(context.Background(), &apis.TerminalCreateRequest{})
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
+	return client.NewClient(conn), nil
 }
 
 func Create(ctx *cli.Context) error {
@@ -35,7 +29,7 @@ func Create(ctx *cli.Context) error {
 		return err
 	}
 
-	req := apis.TerminalCreateRequest{
+	req := terminal.TerminalCreateRequest{
 		Image: ctx.String("image"),
 		Shell: ctx.String("shell"),
 	}

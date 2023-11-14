@@ -1,17 +1,16 @@
 package client
 
 import (
-	"context"
-
-	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/joshmeranda/marina/pkg/apis"
+	"github.com/joshmeranda/marina/pkg/apis/terminal"
 	"google.golang.org/grpc"
 )
 
-var _ apis.MarinaClient = &Client{}
+type Client struct {
+	terminalClient terminal.TerminalClient
+}
 
-type Client struct{}
-
-func (c *Client) CreateTerminal(ctx context.Context, req *apis.TerminalCreateRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+func NewClient(conn grpc.ClientConnInterface) *Client {
+	return &Client{
+		terminalClient: terminal.NewTerminalClient(conn),
+	}
 }

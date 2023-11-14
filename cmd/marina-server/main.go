@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/joshmeranda/marina/pkg/apis"
 	"github.com/joshmeranda/marina/pkg/gateway"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
@@ -49,10 +48,10 @@ func Start(ctx *cli.Context) error {
 		return err
 	}
 
-	gateway := gateway.NewGateway(client)
-
 	server := grpc.NewServer()
-	apis.RegisterMarinaServer(server, gateway)
+
+	gateway := gateway.NewGateway(client)
+	gateway.Register(server)
 
 	if err := server.Serve(listener); err != nil {
 		return err
