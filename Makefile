@@ -1,0 +1,107 @@
+SOURCES=go.mod go.sum $(shell find pkg -type f -name '*.go')
+
+# # # # # # # # # # # # # # # # # # # #
+# Go commands                         #
+# # # # # # # # # # # # # # # # # # # #
+GO_BUILD=go build -ldflags "-X main.Version=${VERSION}"
+GO_FMT=go fmt
+GO_TEST=go test
+
+ifdef VERBOSE
+	GO_BUILD += -v
+	GO_FMT += -x
+	GO_TEST += -test.v
+
+	HELM_PACKAGE += --debug
+
+	RM += --verbose
+endif
+
+HEAD_TAG=$(shell git tag --contains HEAD)
+LAST_TAG=$(shell git tag --sort version:refname --list | tail --lines 1)
+COMMIT=$(shell git rev-parse HEAD)
+
+ifneq (${HEAD_TAG},)
+VERSION=${HEAD_TAG}
+else ifneq (${LAST_TAG},)
+$(info no tag found for HEAD)
+VERSION=${LAST_TAG}-${COMMIT}
+else ifneq (${COMMIT},)
+$(info no tags found)
+VERSION=${COMMIT}
+else
+$(info no commits found)
+VERSION=dev
+endif
+
+ifneq ($(shell git status --porcelain),)
+$(info HEAD is dirty)
+VERSION:=${VERSION}-dirty
+endif
+
+$(info using tag ${VERSION})
+
+# # # # # # # # # # # # # # # # # # # #
+# Help text for easier Makefile usage #
+# # # # # # # # # # # # # # # # # # # #
+.PHONY: help
+
+help:
+	@echo "Usage: make [TARGETS]... [VALUES]"
+	@echo ""
+	@echo "Targets:"
+	@echo "  marina             build marina binary"
+	@echo "  marina-server      build marina-server binary"
+	@echo "  docker             build docker image"
+	@echo "  generate           run code generation"
+	@echo "  clean              clean built and generated files"
+	@echo ""
+	@echo "Values:"
+	@echo "  VERBOSE            if set, various recipes are run with verbose output"
+	@echo "  PUSH               if set, run docker push after building"
+
+# # # # # # # # # # # # # # # # # # # #
+# Binary building                     #
+# # # # # # # # # # # # # # # # # # # #
+
+.PHONY: marina marina-server
+
+marina: generate bin/marina
+
+bin/marina: ./cmd/marina/main.go ${SOURCES}
+	${GO_BUILD} -o $@ ./cmd/marina
+
+marina-server: generate bin/marina-server
+
+bin/marina-server: ./cmd/marina-server/main.go ${SOURCES}
+	${GO_BUILD} -o $@ ./cmd/marina-server
+
+docker: generate
+	docker build --tag joshmeranda/marina:${VERSION} .
+	[ -n "${PUSH}" ] && docker push joshmeranda/marina:${VERSION} || true
+
+# # # # # # # # # # # # # # # # # # # #
+# code generation                     #
+# # # # # # # # # # # # # # # # # # # #
+PROTOS_RAW=$(shell find pkg/apis -type f -name '*.proto')
+PROTOS_GO=$(PROTOS_RAW:.proto=.pb.go)
+PROTOS_GRPC_GO=$(PROTOS_RAW:.proto=_grpc.pb.go)
+
+.PHONY: generate
+
+%.pb.go: %.proto
+	protoc --go_out=. --go_opt=paths=source_relative $<
+
+%_grpc.pb.go: %.proto
+	protoc --go-grpc_out=. --go-grpc_opt=paths=source_relative $<
+
+generate: ${PROTOS_GO} ${PROTOS_GRPC_GO}
+
+# # # # # # # # # # # # # # # # # # # #
+# Project management recipes          #
+# # # # # # # # # # # # # # # # # # # #
+
+.PHONY: clean
+
+clean:
+	${RM} --recursive bin

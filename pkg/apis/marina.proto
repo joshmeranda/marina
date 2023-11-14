@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package marina;
+
+option go_package = "github.com/joshmeranda/marina/apis";
+
+import "google/protobuf/empty.proto";
+
+service Marina {
+    rpc CreateTerminal(TerminalCreateRequest) returns (google.protobuf.Empty) {}
+}
+
+message TerminalCreateRequest {
+    string image = 1;
+    string shell = 2;
+}
