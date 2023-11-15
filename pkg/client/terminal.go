@@ -13,3 +13,7 @@ var _ terminal.TerminalClient = &Client{}
 func (c *Client) CreateTerminal(ctx context.Context, req *terminal.TerminalCreateRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	return c.terminalClient.CreateTerminal(ctx, req, opts...)
 }
+
+func (c *Client) DeleteTerminal(ctx context.Context, req *terminal.TerminalDeleteRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	return c.terminalClient.DeleteTerminal(ctx, req, opts...)
+}

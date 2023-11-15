@@ -5,12 +5,24 @@ package terminal;
 option go_package = "github.com/joshmeranda/marina/apis/terminal";
 
 import "google/protobuf/empty.proto";
+import "pkg/apis/core/core.proto";   
 
 service Terminal {
     rpc CreateTerminal(TerminalCreateRequest) returns (google.protobuf.Empty) {}
+
+    rpc DeleteTerminal(TerminalDeleteRequest) returns (google.protobuf.Empty) {}
+}
+
+message TerminalSpec {
+    string image = 2;
+    string shell = 3;
 }
 
 message TerminalCreateRequest {
-    string image = 1;
-    string shell = 2;
+    core.NamespacedName name = 1;
+    TerminalSpec spec = 2;
+}
+
+message TerminalDeleteRequest {
+    core.NamespacedName name = 1;
 }

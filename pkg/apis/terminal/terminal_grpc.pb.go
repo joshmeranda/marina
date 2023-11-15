@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TerminalClient interface {
 	CreateTerminal(ctx context.Context, in *TerminalCreateRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	DeleteTerminal(ctx context.Context, in *TerminalDeleteRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type terminalClient struct {
@@ -43,11 +44,21 @@ func (c *terminalClient) CreateTerminal(ctx context.Context, in *TerminalCreateR
 	return out, nil
 }
 
+func (c *terminalClient) DeleteTerminal(ctx context.Context, in *TerminalDeleteRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/terminal.Terminal/DeleteTerminal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TerminalServer is the server API for Terminal service.
 // All implementations must embed UnimplementedTerminalServer
 // for forward compatibility
 type TerminalServer interface {
 	CreateTerminal(context.Context, *TerminalCreateRequest) (*empty.Empty, error)
+	DeleteTerminal(context.Context, *TerminalDeleteRequest) (*empty.Empty, error)
 	mustEmbedUnimplementedTerminalServer()
 }
 
@@ -57,6 +68,9 @@ type UnimplementedTerminalServer struct {
 
 func (UnimplementedTerminalServer) CreateTerminal(context.Context, *TerminalCreateRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTerminal not implemented")
+}
+func (UnimplementedTerminalServer) DeleteTerminal(context.Context, *TerminalDeleteRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteTerminal not implemented")
 }
 func (UnimplementedTerminalServer) mustEmbedUnimplementedTerminalServer() {}
 
@@ -89,6 +103,24 @@ func _Terminal_CreateTerminal_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Terminal_DeleteTerminal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TerminalDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TerminalServer).DeleteTerminal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/terminal.Terminal/DeleteTerminal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TerminalServer).DeleteTerminal(ctx, req.(*TerminalDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Terminal_ServiceDesc is the grpc.ServiceDesc for Terminal service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -99,6 +131,10 @@ var Terminal_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateTerminal",
 			Handler:    _Terminal_CreateTerminal_Handler,
+		},
+		{
+			MethodName: "DeleteTerminal",
+			Handler:    _Terminal_DeleteTerminal_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

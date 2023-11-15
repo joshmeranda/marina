@@ -39,7 +39,7 @@ $(info HEAD is dirty)
 VERSION:=${VERSION}-dirty
 endif
 
-$(info using tag ${VERSION})
+$(info using tag '${VERSION}')
 
 # # # # # # # # # # # # # # # # # # # #
 # Help text for easier Makefile usage #
@@ -66,36 +66,44 @@ help:
 
 .PHONY: marina marina-server
 
-marina: generate bin/marina
+marina: bin/marina
 
 bin/marina: ./cmd/marina/main.go ${SOURCES}
 	${GO_BUILD} -o $@ ./cmd/marina
 
-marina-server: generate bin/marina-server
+marina-server: bin/marina-server
 
 bin/marina-server: ./cmd/marina-server/main.go ${SOURCES}
 	${GO_BUILD} -o $@ ./cmd/marina-server
 
-docker: generate
+docker:
 	docker build --tag joshmeranda/marina:${VERSION} .
 	[ -n "${PUSH}" ] && docker push joshmeranda/marina:${VERSION} || true
 
 # # # # # # # # # # # # # # # # # # # #
 # code generation                     #
 # # # # # # # # # # # # # # # # # # # #
-PROTOS_RAW=$(shell find pkg/apis -type f -name '*.proto')
-PROTOS_GO=$(PROTOS_RAW:.proto=.pb.go)
-PROTOS_GRPC_GO=$(PROTOS_RAW:.proto=_grpc.pb.go)
+PROTOS=$(shell find pkg/apis -type f -name '*.proto')
 
 .PHONY: generate
 
-%.pb.go: %.proto
-	protoc --go_out=. --go_opt=paths=source_relative $<
+# we have to generate everything eevry time because there is no good way to handle protobuf dependencies.
+# PROTOS_GO=$(PROTOS_RAW:.proto=.pb.go)
+# PROTOS_GRPC_GO=$(PROTOS_RAW:.proto=_grpc.pb.go)
+#
+# %.pb.go: %.proto
+# 	protoc --go_out=. --go_opt=paths=source_relative $<
+#
+# %_grpc.pb.go: %.proto
+# 	protoc --go-grpc_out=. --go-grpc_opt=paths=source_relative $<
+#
+# generate: ${PROTOS_GO} ${PROTOS_GRPC_GO}
 
-%_grpc.pb.go: %.proto
-	protoc --go-grpc_out=. --go-grpc_opt=paths=source_relative $<
-
-generate: ${PROTOS_GO} ${PROTOS_GRPC_GO}
+generate:
+	protoc -I=. \
+		--go_out=. --go_opt=paths=source_relative \
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		${PROTOS}
 
 # # # # # # # # # # # # # # # # # # # #
 # Project management recipes          #

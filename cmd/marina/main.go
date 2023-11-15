@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/joshmeranda/marina/pkg/apis/core"
 	"github.com/joshmeranda/marina/pkg/apis/terminal"
 	"github.com/joshmeranda/marina/pkg/client"
 	"github.com/urfave/cli/v2"
@@ -62,11 +63,31 @@ func Create(ctx *cli.Context) error {
 	}
 
 	req := terminal.TerminalCreateRequest{
-		Image: ctx.String("image"),
-		Shell: ctx.String("shell"),
+		Name: &core.NamespacedName{
+			Name:      fmt.Sprintf("%s-%s", ctx.String("image"), ctx.String("shell")),
+			Namespace: "marina-system",
+		},
+		Spec: &terminal.TerminalSpec{
+			Image: ctx.String("image"),
+			Shell: ctx.String("shell"),
+		},
 	}
 
 	if _, err := client.CreateTerminal(context.Background(), &req); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Delete(ctx *cli.Context) error {
+	client, err := getClient(ctx)
+	if err != nil {
+		return err
+	}
+
+	req := terminal.TerminalDeleteRequest{}
+	if _, err := client.DeleteTerminal(context.Background(), &req); err != nil {
 		return err
 	}
 
