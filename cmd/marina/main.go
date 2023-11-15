@@ -10,6 +10,7 @@ import (
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 var Version string
@@ -21,6 +22,37 @@ func getClient(ctx *cli.Context) (*client.Client, error) {
 	}
 
 	return client.NewClient(conn), nil
+}
+
+func HealthCheck(ctx *cli.Context) error {
+	var services []string
+	if ctx.NArg() == 0 {
+		services = []string{
+			terminal.Terminal_ServiceDesc.ServiceName,
+		}
+	} else {
+		services = ctx.Args().Slice()
+	}
+
+	client, err := getClient(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, service := range services {
+		req := &healthgrpc.HealthCheckRequest{
+			Service: service,
+		}
+
+		resp, err := client.Check(context.Background(), req)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("%s: %s\n", service, resp.Status.String())
+	}
+
+	return nil
 }
 
 func Create(ctx *cli.Context) error {
@@ -43,10 +75,9 @@ func Create(ctx *cli.Context) error {
 
 func main() {
 	app := cli.App{
-		Name:           "marina",
-		Version:        Version,
-		Description:    "interact with the marina gateway",
-		DefaultCommand: "",
+		Name:        "marina",
+		Version:     Version,
+		Description: "interact with the marina gateway",
 		Commands: []*cli.Command{
 			{
 				Name:        "create",
@@ -64,6 +95,11 @@ func main() {
 						Aliases: []string{"s"},
 					},
 				},
+			},
+			{
+				Name:        "check",
+				Description: "check the health of the gateway",
+				Action:      HealthCheck,
 			},
 		},
 		Flags: []cli.Flag{

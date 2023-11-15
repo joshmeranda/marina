@@ -14,7 +14,7 @@ var _ terminal.TerminalServer = &Gateway{}
 func (g *Gateway) CreateTerminal(ctx context.Context, req *terminal.TerminalCreateRequest) (*empty.Empty, error) {
 	terminal := marinav1.Terminal{}
 
-	if err := g.client.Create(ctx, &terminal); err != nil {
+	if err := g.kubeClient.Create(ctx, &terminal); err != nil {
 		return nil, err
 	}
 

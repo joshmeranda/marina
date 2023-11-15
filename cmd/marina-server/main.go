@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"os"
 
 	"github.com/joshmeranda/marina/pkg/gateway"
 	"github.com/urfave/cli/v2"
@@ -61,5 +62,23 @@ func Start(ctx *cli.Context) error {
 }
 
 func main() {
+	app := cli.App{
+		Name:        "marina-server",
+		Version:     Version,
+		Description: "run the marina gateay server",
+		Flags: []cli.Flag{
+			&cli.IntFlag{
+				Name:    "port",
+				Usage:   "the port for the gateway to listen on",
+				Aliases: []string{"p"},
+				EnvVars: []string{"MARINA_GATEWAY_PORT"},
+			},
+		},
+		Action: Start,
+	}
 
+	if err := app.Run(os.Args); err != nil {
+		fmt.Printf("Error: %s\n", err)
+		os.Exit(1)
+	}
 }
