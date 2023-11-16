@@ -15,7 +15,6 @@ service Terminal {
 
 message TerminalSpec {
     string image = 2;
-    string shell = 3;
 }
 
 message TerminalCreateRequest {

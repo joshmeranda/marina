@@ -64,18 +64,20 @@ func Create(ctx *cli.Context) error {
 
 	req := terminal.TerminalCreateRequest{
 		Name: &core.NamespacedName{
-			Name:      fmt.Sprintf("%s-%s", ctx.String("image"), ctx.String("shell")),
+			Name:      ctx.String("name"),
 			Namespace: "marina-system",
 		},
 		Spec: &terminal.TerminalSpec{
 			Image: ctx.String("image"),
-			Shell: ctx.String("shell"),
 		},
 	}
 
 	if _, err := client.CreateTerminal(context.Background(), &req); err != nil {
 		return err
 	}
+
+	fmt.Printf("Created new terminal. To access run: kubectl exec --stdin --tty --namespace marina-system sh\n")
+	fmt.Printf("To delete run: marina delete\n")
 
 	return nil
 }
@@ -111,9 +113,21 @@ func main() {
 						Aliases: []string{"i"},
 					},
 					&cli.StringFlag{
-						Name:    "shell",
-						Usage:   "the shell to use for the terminal",
-						Aliases: []string{"s"},
+						Name:    "name",
+						Usage:   "the name of the terminal",
+						Aliases: []string{"n"},
+					},
+				},
+			},
+			{
+				Name:        "delete",
+				Description: "delete a new terminal",
+				Action:      Delete,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "name",
+						Usage:   "the name of the terminal",
+						Aliases: []string{"n"},
 					},
 				},
 			},
