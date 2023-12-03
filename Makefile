@@ -49,8 +49,7 @@ help:
 
 .PHONY: marina marina-server
 
-marina: bin/marina
-
+marina: ${LOCALBIN}/marina
 ${LOCALBIN}/marina: ./cmd/marina/main.go ${SOURCES}
 	${GO_BUILD} -o $@ ./cmd/marina
 

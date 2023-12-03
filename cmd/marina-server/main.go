@@ -31,7 +31,9 @@ func getClusterClient(ctx *cli.Context) (client.Client, error) {
 	}
 
 	schema := runtime.NewScheme()
-	schema.AddKnownTypes(marinav1.GroupVersion, &marinav1.Terminal{}, &marinav1.TerminalList{})
+	if err := marinav1.AddToScheme(schema); err != nil {
+		return nil, fmt.Errorf("failed to add marina scheme: %w", err)
+	}
 
 	opts := client.Options{
 		Scheme: schema,
