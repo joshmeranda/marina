@@ -2,12 +2,15 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"net"
 	"os"
 
+	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
 	"github.com/joshmeranda/marina/pkg/gateway"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -27,7 +30,14 @@ func getClusterClient(ctx *cli.Context) (client.Client, error) {
 		return nil, fmt.Errorf("failed to get in-cluster config: %w", err)
 	}
 
-	client, err := client.New(config, client.Options{})
+	schema := runtime.NewScheme()
+	schema.AddKnownTypes(marinav1.GroupVersion, &marinav1.Terminal{}, &marinav1.TerminalList{})
+
+	opts := client.Options{
+		Scheme: schema,
+	}
+
+	client, err := client.New(config, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create client: %w", err)
 	}
@@ -49,9 +59,11 @@ func Start(ctx *cli.Context) error {
 		return err
 	}
 
-	server := grpc.NewServer()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
 
-	gateway := gateway.NewGateway(client)
+	server := grpc.NewServer(grpc.UnaryInterceptor(gateway.LoggingInterceptor(logger)))
+
+	gateway := gateway.NewGateway(client, logger)
 	gateway.Register(server)
 
 	if err := server.Serve(listener); err != nil {
@@ -72,6 +84,7 @@ func main() {
 				Usage:   "the port for the gateway to listen on",
 				Aliases: []string{"p"},
 				EnvVars: []string{"MARINA_GATEWAY_PORT"},
+				Value:   8081, // todo: estalish default port
 			},
 		},
 		Action: Start,

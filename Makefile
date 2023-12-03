@@ -17,29 +17,11 @@ ifdef VERBOSE
 	RM += --verbose
 endif
 
-HEAD_TAG=$(shell git tag --contains HEAD)
-LAST_TAG=$(shell git tag --sort version:refname --list | tail --lines 1)
-COMMIT=$(shell git rev-parse HEAD)
-
-ifneq (${HEAD_TAG},)
-VERSION=${HEAD_TAG}
-else ifneq (${LAST_TAG},)
-$(info no tag found for HEAD)
-VERSION=${LAST_TAG}-${COMMIT}
-else ifneq (${COMMIT},)
-$(info no tags found)
-VERSION=${COMMIT}
-else
-$(info no commits found)
-VERSION=dev
-endif
-
-ifneq ($(shell git status --porcelain),)
-$(info HEAD is dirty)
-VERSION:=${VERSION}-dirty
-endif
+VERSION=$(shell hack/version.sh)
 
 $(info using tag '${VERSION}')
+
+LOCALBIN=$(shell pwd)/bin
 
 # # # # # # # # # # # # # # # # # # # #
 # Help text for easier Makefile usage #
@@ -54,6 +36,7 @@ help:
 	@echo "  marina-server      build marina-server binary"
 	@echo "  docker             build docker image"
 	@echo "  generate           run code generation"
+	@echo "  lint               run linting (can run seperate linitng with lint-go and lint-helm)"
 	@echo "  clean              clean built and generated files"
 	@echo ""
 	@echo "Values:"
@@ -68,12 +51,12 @@ help:
 
 marina: bin/marina
 
-bin/marina: ./cmd/marina/main.go ${SOURCES}
+${LOCALBIN}/marina: ./cmd/marina/main.go ${SOURCES}
 	${GO_BUILD} -o $@ ./cmd/marina
 
-marina-server: bin/marina-server
+marina-server: ${LOCALBIN}/marina-server
 
-bin/marina-server: ./cmd/marina-server/main.go ${SOURCES}
+${LOCALBIN}/marina-server: ./cmd/marina-server/main.go ${SOURCES}
 	${GO_BUILD} -o $@ ./cmd/marina-server
 
 docker:
@@ -104,6 +87,42 @@ generate:
 		--go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 		${PROTOS}
+
+
+# # # # # # # # # # # # # # # # # # # #
+# Linting recipes                     #
+# # # # # # # # # # # # # # # # # # # #
+
+.PHONY: lint lint-go lint-helm
+
+lint-go:
+	go vet ./...
+	golangci-lint run
+
+lint-helm:
+	helm lint --quiet chart
+
+lint: lint-go lint-helm
+
+# # # # # # # # # # # # # # # # # # # #
+# Test Environment recipes            #
+# # # # # # # # # # # # # # # # # # # #
+
+.PHONY: test envtest
+
+ENVTEST=${LOCALBIN}/setup-envtest
+ENV_TEST_K8S_VERSION=1.26.0
+
+envtest: $(ENVTEST)
+$(ENVTEST):
+	test -s $(ENVTEST) || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+
+# # # # # # # # # # # # # # # # # # # #
+# Testing recipes                     #
+# # # # # # # # # # # # # # # # # # # #
+
+test: envtest
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" ${GO_TEST} ./...
 
 # # # # # # # # # # # # # # # # # # # #
 # Project management recipes          #

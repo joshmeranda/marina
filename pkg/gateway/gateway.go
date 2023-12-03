@@ -1,6 +1,9 @@
 package gateway
 
 import (
+	"context"
+	"log/slog"
+
 	"github.com/joshmeranda/marina/pkg/apis/terminal"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -8,16 +11,33 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type Gateway struct {
-	terminal.UnimplementedTerminalServer
-	health     healthgrpc.HealthServer
-	kubeClient client.Client
+func LoggingInterceptor(l *slog.Logger) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+		l.Info("gRPC method call", "method", info.FullMethod)
+		resp, err = handler(ctx, req)
+		if err != nil {
+			l.Error("gRPC method call error",
+				"method", info.FullMethod,
+				"error", err)
+		}
+		return resp, err
+	}
 }
 
-func NewGateway(client client.Client) *Gateway {
+type Gateway struct {
+	terminal.UnimplementedTerminalServer
+
+	health     healthgrpc.HealthServer
+	kubeClient client.Client
+
+	logger *slog.Logger
+}
+
+func NewGateway(client client.Client, logger *slog.Logger) *Gateway {
 	return &Gateway{
 		kubeClient: client,
 		health:     health.NewServer(),
+		logger:     logger,
 	}
 }
 
