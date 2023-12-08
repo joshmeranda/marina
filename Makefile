@@ -120,7 +120,10 @@ $(ENVTEST):
 # Testing recipes                     #
 # # # # # # # # # # # # # # # # # # # #
 
-test: envtest
+crds:
+	hack/update_crd.sh
+
+test: crds envtest
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" ${GO_TEST} ./...
 
 # # # # # # # # # # # # # # # # # # # #

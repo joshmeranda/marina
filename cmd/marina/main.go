@@ -12,12 +12,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/internalversion/scheme"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/tools/remotecommand"
 )
 
 var Version string
@@ -29,21 +23,6 @@ func getClient(ctx *cli.Context) (*client.Client, error) {
 	}
 
 	return client.NewClient(conn), nil
-}
-
-// todo: replace with kubeconfig content received from the gateway.
-func getKubeClient(ctx *cli.Context) (kubernetes.Interface, error) {
-	config, err := clientcmd.BuildConfigFromFlags("", ctx.String("KUBECONFIG"))
-	if err != nil {
-		return nil, err
-	}
-
-	kubeClient, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	return kubeClient, nil
 }
 
 func HealthCheck(ctx *cli.Context) error {
@@ -93,51 +72,16 @@ func Create(ctx *cli.Context) error {
 		},
 	}
 
-	if _, err := client.CreateTerminal(context.Background(), &createReq); err != nil {
-		return err
-	}
-
-	kubeClient, err := getKubeClient(ctx)
-	if err != nil {
-		return err
-	}
-
-	opts := &corev1.PodExecOptions{
-		Stdin:     true,
-		Stdout:    true,
-		Stderr:    true,
-		TTY:       true,
-		Container: "shell",
-		Command:   []string{"sh"},
-	}
-
-	execReq := kubeClient.CoreV1().RESTClient().Post().
-		Resource("pods").
-		Name(ctx.String("name")).
-		Namespace("marina-system").
-		SubResource("exec").
-		VersionedParams(opts, scheme.ParameterCodec)
-
-	exec, err := remotecommand.NewSPDYExecutor(&rest.Config{}, "POST", execReq.URL())
-	if err != nil {
-		return err
-	}
-
-	err = exec.StreamWithContext(ctx.Context, remotecommand.StreamOptions{
-		Stdin:  os.Stdin,
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
-		Tty:    true,
-	})
-	if err != nil {
-		return err
+	if err := client.Exec(ctx.Context, createReq.Name); err != nil {
+		return fmt.Errorf("could not access terminal: %w", err)
 	}
 
 	deleteReq := terminal.TerminalDeleteRequest{
 		Name: createReq.Name,
 	}
+
 	if _, err := client.DeleteTerminal(context.Background(), &deleteReq); err != nil {
-		return err
+		return fmt.Errorf("could not delete terminal: %w", err)
 	}
 
 	return nil
@@ -180,10 +124,17 @@ func main() {
 				Aliases:  []string{"a"},
 				EnvVars:  []string{"MARINA_GATEWAY_ADDRESS"},
 			},
+			&cli.StringFlag{
+				Name:    "kubeconfig",
+				Usage:   "the path to the kubeconfig file to use for the terminal",
+				EnvVars: []string{"KUBECONFIG"},
+				Aliases: []string{"f"},
+			},
 		},
 	}
 
-	if err := app.Run(os.Args); err != nil {
+	// if err := app.Run(os.Args); err != nil {
+	if err := app.Run([]string{"marina", "--address", ":8080", "create", "-i", "busybox:latest", "-n", "marina-test"}); err != nil {
 		fmt.Printf("Error: %s\n", err)
 		os.Exit(1)
 	}
