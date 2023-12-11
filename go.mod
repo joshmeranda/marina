@@ -4,7 +4,7 @@ go 1.21.0
 
 require (
 	github.com/golang/protobuf v1.5.3
-	github.com/joshmeranda/marina-operator v0.0.0-20231116051459-689201713b3a
+	github.com/joshmeranda/marina-operator v0.0.0-20231211045715-e29fc3be06c1
 	github.com/onsi/ginkgo/v2 v2.11.0
 	github.com/onsi/gomega v1.27.10
 	github.com/urfave/cli/v2 v2.25.7

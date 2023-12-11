@@ -19,122 +19,122 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// TerminalClient is the client API for Terminal service.
+// TerminalServiceClient is the client API for TerminalService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type TerminalClient interface {
+type TerminalServiceClient interface {
 	CreateTerminal(ctx context.Context, in *TerminalCreateRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	DeleteTerminal(ctx context.Context, in *TerminalDeleteRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
-type terminalClient struct {
+type terminalServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewTerminalClient(cc grpc.ClientConnInterface) TerminalClient {
-	return &terminalClient{cc}
+func NewTerminalServiceClient(cc grpc.ClientConnInterface) TerminalServiceClient {
+	return &terminalServiceClient{cc}
 }
 
-func (c *terminalClient) CreateTerminal(ctx context.Context, in *TerminalCreateRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *terminalServiceClient) CreateTerminal(ctx context.Context, in *TerminalCreateRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/terminal.Terminal/CreateTerminal", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/terminal.TerminalService/CreateTerminal", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *terminalClient) DeleteTerminal(ctx context.Context, in *TerminalDeleteRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *terminalServiceClient) DeleteTerminal(ctx context.Context, in *TerminalDeleteRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/terminal.Terminal/DeleteTerminal", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/terminal.TerminalService/DeleteTerminal", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// TerminalServer is the server API for Terminal service.
-// All implementations must embed UnimplementedTerminalServer
+// TerminalServiceServer is the server API for TerminalService service.
+// All implementations must embed UnimplementedTerminalServiceServer
 // for forward compatibility
-type TerminalServer interface {
+type TerminalServiceServer interface {
 	CreateTerminal(context.Context, *TerminalCreateRequest) (*empty.Empty, error)
 	DeleteTerminal(context.Context, *TerminalDeleteRequest) (*empty.Empty, error)
-	mustEmbedUnimplementedTerminalServer()
+	mustEmbedUnimplementedTerminalServiceServer()
 }
 
-// UnimplementedTerminalServer must be embedded to have forward compatible implementations.
-type UnimplementedTerminalServer struct {
+// UnimplementedTerminalServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedTerminalServiceServer struct {
 }
 
-func (UnimplementedTerminalServer) CreateTerminal(context.Context, *TerminalCreateRequest) (*empty.Empty, error) {
+func (UnimplementedTerminalServiceServer) CreateTerminal(context.Context, *TerminalCreateRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTerminal not implemented")
 }
-func (UnimplementedTerminalServer) DeleteTerminal(context.Context, *TerminalDeleteRequest) (*empty.Empty, error) {
+func (UnimplementedTerminalServiceServer) DeleteTerminal(context.Context, *TerminalDeleteRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTerminal not implemented")
 }
-func (UnimplementedTerminalServer) mustEmbedUnimplementedTerminalServer() {}
+func (UnimplementedTerminalServiceServer) mustEmbedUnimplementedTerminalServiceServer() {}
 
-// UnsafeTerminalServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to TerminalServer will
+// UnsafeTerminalServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to TerminalServiceServer will
 // result in compilation errors.
-type UnsafeTerminalServer interface {
-	mustEmbedUnimplementedTerminalServer()
+type UnsafeTerminalServiceServer interface {
+	mustEmbedUnimplementedTerminalServiceServer()
 }
 
-func RegisterTerminalServer(s grpc.ServiceRegistrar, srv TerminalServer) {
-	s.RegisterService(&Terminal_ServiceDesc, srv)
+func RegisterTerminalServiceServer(s grpc.ServiceRegistrar, srv TerminalServiceServer) {
+	s.RegisterService(&TerminalService_ServiceDesc, srv)
 }
 
-func _Terminal_CreateTerminal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _TerminalService_CreateTerminal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(TerminalCreateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TerminalServer).CreateTerminal(ctx, in)
+		return srv.(TerminalServiceServer).CreateTerminal(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/terminal.Terminal/CreateTerminal",
+		FullMethod: "/terminal.TerminalService/CreateTerminal",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TerminalServer).CreateTerminal(ctx, req.(*TerminalCreateRequest))
+		return srv.(TerminalServiceServer).CreateTerminal(ctx, req.(*TerminalCreateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Terminal_DeleteTerminal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _TerminalService_DeleteTerminal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(TerminalDeleteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TerminalServer).DeleteTerminal(ctx, in)
+		return srv.(TerminalServiceServer).DeleteTerminal(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/terminal.Terminal/DeleteTerminal",
+		FullMethod: "/terminal.TerminalService/DeleteTerminal",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TerminalServer).DeleteTerminal(ctx, req.(*TerminalDeleteRequest))
+		return srv.(TerminalServiceServer).DeleteTerminal(ctx, req.(*TerminalDeleteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Terminal_ServiceDesc is the grpc.ServiceDesc for Terminal service.
+// TerminalService_ServiceDesc is the grpc.ServiceDesc for TerminalService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Terminal_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "terminal.Terminal",
-	HandlerType: (*TerminalServer)(nil),
+var TerminalService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "terminal.TerminalService",
+	HandlerType: (*TerminalServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "CreateTerminal",
-			Handler:    _Terminal_CreateTerminal_Handler,
+			Handler:    _TerminalService_CreateTerminal_Handler,
 		},
 		{
 			MethodName: "DeleteTerminal",
-			Handler:    _Terminal_DeleteTerminal_Handler,
+			Handler:    _TerminalService_DeleteTerminal_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

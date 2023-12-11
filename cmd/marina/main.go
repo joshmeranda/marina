@@ -7,6 +7,7 @@ import (
 
 	"github.com/joshmeranda/marina/pkg/apis/core"
 	"github.com/joshmeranda/marina/pkg/apis/terminal"
+	"github.com/joshmeranda/marina/pkg/apis/user"
 	"github.com/joshmeranda/marina/pkg/client"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
@@ -29,7 +30,8 @@ func HealthCheck(ctx *cli.Context) error {
 	var services []string
 	if ctx.NArg() == 0 {
 		services = []string{
-			terminal.Terminal_ServiceDesc.ServiceName,
+			terminal.TerminalService_ServiceDesc.ServiceName,
+			user.UserService_ServiceDesc.ServiceName,
 		}
 	} else {
 		services = ctx.Args().Slice()

@@ -11,7 +11,7 @@ import (
 	"github.com/joshmeranda/marina/pkg/apis/terminal"
 )
 
-var _ terminal.TerminalServer = &Gateway{}
+var _ terminal.TerminalServiceServer = &Gateway{}
 
 func (g *Gateway) CreateTerminal(ctx context.Context, req *terminal.TerminalCreateRequest) (*empty.Empty, error) {
 	terminal := marinav1.Terminal{

@@ -59,8 +59,8 @@ github.com/imdario/mergo v0.3.6/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJ
 github.com/jessevdk/go-flags v1.4.0/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
 github.com/josharian/intern v1.0.0 h1:vlS4z54oSdjm0bgjRigI+G1HpF+tI+9rE5LLzOg8HmY=
 github.com/josharian/intern v1.0.0/go.mod h1:5DoeVV0s6jJacbCEi61lwdGj/aVlrQvzHFFd8Hwg//Y=
-github.com/joshmeranda/marina-operator v0.0.0-20231116051459-689201713b3a h1:x5FjEoXUoNeTLSnJlSHSURKYEfq7nDQkbF4X8qdpCmo=
-github.com/joshmeranda/marina-operator v0.0.0-20231116051459-689201713b3a/go.mod h1:pPiWDJbAxkVd8icKUUu4mnynAJD+gSZsRu7SdCuagmA=
+github.com/joshmeranda/marina-operator v0.0.0-20231211045715-e29fc3be06c1 h1:7mgdqdN+PJyzH4bh02gqPNeafbRTSQeiidwvMc2Lit0=
+github.com/joshmeranda/marina-operator v0.0.0-20231211045715-e29fc3be06c1/go.mod h1:pPiWDJbAxkVd8icKUUu4mnynAJD+gSZsRu7SdCuagmA=
 github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnrnM=
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
 github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI2bnpBCr8=

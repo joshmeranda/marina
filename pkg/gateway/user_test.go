@@ -1,0 +1,145 @@
+package gateway_test
+
+import (
+	"context"
+	"log/slog"
+	"os"
+
+	terminalv1 "github.com/joshmeranda/marina-operator/api/v1"
+	"github.com/joshmeranda/marina/pkg/apis/user"
+	"github.com/joshmeranda/marina/pkg/gateway"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+)
+
+var _ = Describe("Gateway User Service", Ordered, func() {
+	var logger *slog.Logger
+	var g *gateway.Gateway
+	var namespace string
+
+	BeforeAll(func() {
+		namespace = "marina-system"
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
+		g = gateway.NewGateway(k8sClient, logger)
+		k8sClient.Create(context.Background(), &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      namespace,
+				Namespace: namespace,
+			},
+		})
+
+		err := k8sClient.Create(context.Background(), &rbacv1.Role{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "SomeRole",
+				Namespace: namespace,
+			},
+		})
+		if !errors.IsAlreadyExists(err) {
+			Expect(err).NotTo(HaveOccurred())
+		}
+
+		err = k8sClient.Create(context.Background(), &rbacv1.Role{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "SomeRole",
+				Namespace: namespace,
+			},
+		})
+		if !errors.IsAlreadyExists(err) {
+			Expect(err).NotTo(HaveOccurred())
+		}
+
+		err = k8sClient.Create(context.Background(), &rbacv1.Role{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "AnotherRole",
+				Namespace: namespace,
+			},
+		})
+		if !errors.IsAlreadyExists(err) {
+			Expect(err).NotTo(HaveOccurred())
+		}
+	})
+
+	When("user roles exist", func() {
+		It("can create a user", func(ctx context.Context) {
+			req := &user.UserCreateRequest{
+				User: &user.User{
+					Name:  "bbaggins",
+					Roles: []string{"SomeRole"},
+				},
+			}
+
+			_, err := g.CreateUser(ctx, req)
+			Expect(err).NotTo(HaveOccurred())
+
+			var foundUser terminalv1.User
+			err = k8sClient.Get(ctx, types.NamespacedName{
+				Name:      req.User.Name,
+				Namespace: namespace,
+			}, &foundUser)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("can edit a user", func(ctx context.Context) {
+			req := &user.UserUpdateRequest{
+				User: &user.User{
+					Name:  "bbaggins",
+					Roles: []string{"AnotherRole"},
+				},
+			}
+
+			_, err := g.UpdateUser(ctx, req)
+			Expect(err).NotTo(HaveOccurred())
+
+			var foundUser terminalv1.User
+			err = k8sClient.Get(ctx, types.NamespacedName{
+				Name:      req.User.Name,
+				Namespace: namespace,
+			}, &foundUser)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(foundUser.Spec.Roles).To(Equal(req.User.Roles))
+		})
+
+		It("can delete a user", func(ctx context.Context) {
+			req := &user.UserDeleteRequest{
+				Name: "bbaggins",
+			}
+
+			_, err := g.DeleteUser(ctx, req)
+			Expect(err).NotTo(HaveOccurred())
+
+			var foundUser terminalv1.User
+			err = k8sClient.Get(ctx, types.NamespacedName{
+				Name:      req.Name,
+				Namespace: namespace,
+			}, &foundUser)
+			Expect(errors.IsNotFound(err)).To(BeTrue())
+			Expect(foundUser).To(BeZero())
+		})
+	})
+
+	When("user roles do not exist", func() {
+		It("returns an error", func(ctx context.Context) {
+			req := &user.UserCreateRequest{
+				User: &user.User{
+					Name:  "bbaggins",
+					Roles: []string{"NonExistantRole"},
+				},
+			}
+
+			_, err := g.CreateUser(ctx, req)
+			Expect(err).To(HaveOccurred())
+
+			var foundUser terminalv1.User
+			err = k8sClient.Get(ctx, types.NamespacedName{
+				Name:      req.User.Name,
+				Namespace: namespace,
+			}, &foundUser)
+			Expect(errors.IsNotFound(err)).To(BeTrue())
+		})
+	})
+})

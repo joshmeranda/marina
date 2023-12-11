@@ -17,7 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Gateway", Ordered, func() {
+var _ = Describe("Gateway Terminal Service", Ordered, func() {
 	var logger *slog.Logger
 	var g *gateway.Gateway
 	var namespace string

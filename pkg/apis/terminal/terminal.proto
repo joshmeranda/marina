@@ -5,9 +5,9 @@ package terminal;
 option go_package = "github.com/joshmeranda/marina/apis/terminal";
 
 import "google/protobuf/empty.proto";
-import "pkg/apis/core/core.proto";   
+import "pkg/apis/core/core.proto";
 
-service Terminal {
+service TerminalService {
     rpc CreateTerminal(TerminalCreateRequest) returns (google.protobuf.Empty) {}
 
     rpc DeleteTerminal(TerminalDeleteRequest) returns (google.protobuf.Empty) {}

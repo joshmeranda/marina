@@ -7,18 +7,20 @@ import (
 
 	"github.com/joshmeranda/marina/pkg/apis/core"
 	"github.com/joshmeranda/marina/pkg/apis/terminal"
+	"github.com/joshmeranda/marina/pkg/apis/user"
 	"google.golang.org/grpc"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 type Client struct {
-	terminalClient terminal.TerminalClient
+	terminalClient terminal.TerminalServiceClient
+	userClient     user.UserServiceClient
 	health         healthgrpc.HealthClient
 }
 
 func NewClient(conn grpc.ClientConnInterface) *Client {
 	return &Client{
-		terminalClient: terminal.NewTerminalClient(conn),
+		terminalClient: terminal.NewTerminalServiceClient(conn),
 		health:         healthgrpc.NewHealthClient(conn),
 	}
 }

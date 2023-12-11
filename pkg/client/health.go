@@ -10,10 +10,20 @@ import (
 var _ healthgrpc.HealthClient = &Client{}
 
 func (c *Client) Check(ctx context.Context, in *healthgrpc.HealthCheckRequest, opts ...grpc.CallOption) (*healthgrpc.HealthCheckResponse, error) {
-	return c.health.Check(ctx, in, opts...)
+	resp, err := c.health.Check(ctx, in, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // Watch implements grpc_health_v1.HealthClient.
 func (c *Client) Watch(ctx context.Context, in *healthgrpc.HealthCheckRequest, opts ...grpc.CallOption) (healthgrpc.Health_WatchClient, error) {
-	return c.health.Watch(ctx, in, opts...)
+	wc, err := c.health.Watch(ctx, in, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return wc, nil
 }
