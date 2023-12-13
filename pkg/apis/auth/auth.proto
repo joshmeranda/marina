@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package="github.com/joshmeranda/marina/apis/auth";
+
+service AuthService {
+	rpc Login(LoginRequest) returns (LoginResponse) {}
+}
+
+message LoginRequest {
+	// token is the access token received from the OAuth2 provider
+	string token = 1;
+}
+
+message LoginResponse {
+	// token is the bearer token to be used for future requests
+	string token = 1;
+}

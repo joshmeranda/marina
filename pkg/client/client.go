@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/joshmeranda/marina/pkg/apis/auth"
 	"github.com/joshmeranda/marina/pkg/apis/core"
 	"github.com/joshmeranda/marina/pkg/apis/terminal"
 	"github.com/joshmeranda/marina/pkg/apis/user"
@@ -15,13 +16,18 @@ import (
 type Client struct {
 	terminalClient terminal.TerminalServiceClient
 	userClient     user.UserServiceClient
-	health         healthgrpc.HealthClient
+	authClient     auth.AuthServiceClient
+
+	health healthgrpc.HealthClient
 }
 
 func NewClient(conn grpc.ClientConnInterface) *Client {
 	return &Client{
 		terminalClient: terminal.NewTerminalServiceClient(conn),
-		health:         healthgrpc.NewHealthClient(conn),
+		userClient:     user.NewUserServiceClient(conn),
+		authClient:     auth.NewAuthServiceClient(conn),
+
+		health: healthgrpc.NewHealthClient(conn),
 	}
 }
 

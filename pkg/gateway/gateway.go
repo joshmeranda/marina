@@ -4,8 +4,10 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/joshmeranda/marina/pkg/apis/auth"
 	"github.com/joshmeranda/marina/pkg/apis/terminal"
 	"github.com/joshmeranda/marina/pkg/apis/user"
+	"github.com/joshmeranda/marina/pkg/store"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
@@ -28,11 +30,13 @@ func LoggingInterceptor(l *slog.Logger) grpc.UnaryServerInterceptor {
 type Gateway struct {
 	terminal.UnimplementedTerminalServiceServer
 	user.UnimplementedUserServiceServer
+	auth.UnimplementedAuthServiceServer
 
-	health     healthgrpc.HealthServer
+	health healthgrpc.HealthServer
+
 	kubeClient client.Client
-
-	logger *slog.Logger
+	logger     *slog.Logger
+	authStore  store.KeyValueStore[string, string]
 }
 
 func NewGateway(client client.Client, logger *slog.Logger) *Gateway {
@@ -51,6 +55,9 @@ func (g *Gateway) Register(s *grpc.Server) {
 
 	user.RegisterUserServiceServer(s, g)
 	healthUpdater.SetServingStatus(user.UserService_ServiceDesc.ServiceName, healthgrpc.HealthCheckResponse_SERVING)
+
+	auth.RegisterAuthServiceServer(s, g)
+	healthUpdater.SetServingStatus(auth.AuthService_ServiceDesc.ServiceName, healthgrpc.HealthCheckResponse_SERVING)
 
 	healthgrpc.RegisterHealthServer(s, g)
 	healthUpdater.SetServingStatus(healthgrpc.Health_ServiceDesc.ServiceName, healthgrpc.HealthCheckResponse_SERVING)

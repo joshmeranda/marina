@@ -68,6 +68,8 @@ func Start(ctx *cli.Context) error {
 	gateway := gateway.NewGateway(client, logger)
 	gateway.Register(server)
 
+	logger.Info("starting server", "addr", addr)
+
 	if err := server.Serve(listener); err != nil {
 		return err
 	}
@@ -87,6 +89,12 @@ func main() {
 				Aliases: []string{"p"},
 				EnvVars: []string{"MARINA_GATEWAY_PORT"},
 				Value:   8081, // todo: estalish default port
+			},
+			&cli.StringFlag{
+				Name:    "kubeconfig",
+				Usage:   "the path to the kubeconfig file to use for the terminal",
+				EnvVars: []string{"KUBECONFIG"},
+				Aliases: []string{"f"},
 			},
 		},
 		Action: Start,

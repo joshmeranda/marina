@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/joshmeranda/marina/pkg/apis/auth"
 	"github.com/joshmeranda/marina/pkg/apis/core"
 	"github.com/joshmeranda/marina/pkg/apis/terminal"
 	"github.com/joshmeranda/marina/pkg/apis/user"
@@ -24,6 +25,37 @@ func getClient(ctx *cli.Context) (*client.Client, error) {
 	}
 
 	return client.NewClient(conn), nil
+}
+
+func Create(ctx *cli.Context) error {
+	client, err := getClient(ctx)
+	if err != nil {
+		return err
+	}
+
+	createReq := terminal.TerminalCreateRequest{
+		Name: &core.NamespacedName{
+			Name:      ctx.String("name"),
+			Namespace: "marina-system",
+		},
+		Spec: &terminal.TerminalSpec{
+			Image: ctx.String("image"),
+		},
+	}
+
+	if err := client.Exec(ctx.Context, createReq.Name); err != nil {
+		return fmt.Errorf("could not access terminal: %w", err)
+	}
+
+	deleteReq := terminal.TerminalDeleteRequest{
+		Name: createReq.Name,
+	}
+
+	if _, err := client.DeleteTerminal(context.Background(), &deleteReq); err != nil {
+		return fmt.Errorf("could not delete terminal: %w", err)
+	}
+
+	return nil
 }
 
 func HealthCheck(ctx *cli.Context) error {
@@ -58,33 +90,20 @@ func HealthCheck(ctx *cli.Context) error {
 	return nil
 }
 
-func Create(ctx *cli.Context) error {
+func Login(ctx *cli.Context) error {
+	req := &auth.LoginRequest{}
+
 	client, err := getClient(ctx)
 	if err != nil {
 		return err
 	}
 
-	createReq := terminal.TerminalCreateRequest{
-		Name: &core.NamespacedName{
-			Name:      ctx.String("name"),
-			Namespace: "marina-system",
-		},
-		Spec: &terminal.TerminalSpec{
-			Image: ctx.String("image"),
-		},
+	resp, err := client.Login(context.Background(), req)
+	if err != nil {
+		return err
 	}
 
-	if err := client.Exec(ctx.Context, createReq.Name); err != nil {
-		return fmt.Errorf("could not access terminal: %w", err)
-	}
-
-	deleteReq := terminal.TerminalDeleteRequest{
-		Name: createReq.Name,
-	}
-
-	if _, err := client.DeleteTerminal(context.Background(), &deleteReq); err != nil {
-		return fmt.Errorf("could not delete terminal: %w", err)
-	}
+	fmt.Printf("token: %s\n", resp.Token)
 
 	return nil
 }
@@ -117,6 +136,11 @@ func main() {
 				Description: "check the health of the gateway",
 				Action:      HealthCheck,
 			},
+			{
+				Name:        "login",
+				Description: "get and store gateway authentication credentials",
+				Action:      Login,
+			},
 		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{
@@ -135,8 +159,7 @@ func main() {
 		},
 	}
 
-	// if err := app.Run(os.Args); err != nil {
-	if err := app.Run([]string{"marina", "--address", ":8080", "create", "-i", "busybox:latest", "-n", "marina-test"}); err != nil {
+	if err := app.Run(os.Args); err != nil {
 		fmt.Printf("Error: %s\n", err)
 		os.Exit(1)
 	}
