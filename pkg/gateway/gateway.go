@@ -4,10 +4,12 @@ import (
 	"context"
 	"log/slog"
 
+	marina "github.com/joshmeranda/marina/pkg"
 	"github.com/joshmeranda/marina/pkg/apis/auth"
 	"github.com/joshmeranda/marina/pkg/apis/terminal"
 	"github.com/joshmeranda/marina/pkg/apis/user"
 	"github.com/joshmeranda/marina/pkg/drivers/secret"
+	"github.com/joshmeranda/marina/pkg/drivers/storage"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
@@ -37,15 +39,18 @@ type Gateway struct {
 	kubeClient   client.Client
 	logger       *slog.Logger
 	secretDriver secret.Driver
+
+	accessListStore storage.KeyValueStore[string, marina.UserAccessList]
 }
 
 // todo: convert to use options...
-func NewGateway(client client.Client, logger *slog.Logger, secretDriver secret.Driver) *Gateway {
+func NewGateway(client client.Client, logger *slog.Logger, secretDriver secret.Driver, accessListStore storage.KeyValueStore[string, marina.UserAccessList]) *Gateway {
 	return &Gateway{
-		kubeClient:   client,
-		health:       health.NewServer(),
-		logger:       logger,
-		secretDriver: secretDriver,
+		kubeClient:      client,
+		health:          health.NewServer(),
+		logger:          logger,
+		secretDriver:    secretDriver,
+		accessListStore: accessListStore,
 	}
 }
 

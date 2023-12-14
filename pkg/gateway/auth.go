@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/go-github/v57/github"
+	marina "github.com/joshmeranda/marina/pkg"
 	"github.com/joshmeranda/marina/pkg/apis/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -17,12 +18,15 @@ var _ auth.AuthServiceServer = &Gateway{}
 const (
 	TokenSigningSecretName  = "jet-signing-key"
 	TokenSigningSecretField = "value"
+
+	UserAccessFieldKeyName = "user-access-list"
 )
 
 type customDataClaims struct {
 	jwt.RegisteredClaims
 
-	User string `json:"user,omitempty"`
+	User          string   `json:"user,omitempty"`
+	Organizations []string `json:"organizations,omitempty"`
 }
 
 func (g *Gateway) TokenAuthInterceptor() grpc.UnaryServerInterceptor {
@@ -63,6 +67,32 @@ func (g *Gateway) TokenAuthInterceptor() grpc.UnaryServerInterceptor {
 	}
 }
 
+func (g *Gateway) isUserAllowed(ctx context.Context, ghClient *github.Client, user *github.User) (bool, error) {
+	orgs, _, err := ghClient.Organizations.List(context.Background(), "", nil)
+	if err != nil {
+		return false, fmt.Errorf("could not retrieve user organizations: %w", err)
+	}
+
+	orgNames := make([]string, len(orgs), len(orgs))
+	for i, org := range orgs {
+		orgNames[i] = org.GetLogin()
+	}
+
+	list, err := g.accessListStore.Get(ctx, UserAccessFieldKeyName)
+	if err != nil {
+		return false, fmt.Errorf("could not retrieve user access list: %w", err)
+	}
+
+	switch accessType := list.GetAccessFor(user.GetLogin(), orgNames); accessType {
+	case marina.AccessTypeAllow:
+		return true, nil
+	case marina.AccessTypeDeny | marina.AccessTypeUnknown:
+		return false, nil
+	default:
+		panic(fmt.Sprintf("bug: encountered unsupported accesss type %d", accessType))
+	}
+}
+
 func (g *Gateway) Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
 	// todo: check against white / black listed users
 	client := github.NewClient(nil).WithAuthToken(req.Token)
@@ -70,6 +100,15 @@ func (g *Gateway) Login(ctx context.Context, req *auth.LoginRequest) (*auth.Logi
 	user, _, err := client.Users.Get(ctx, "")
 	if err != nil {
 		return nil, err
+	}
+
+	isUserAllowed, err := g.isUserAllowed(ctx, client, user)
+	if err != nil {
+		return nil, fmt.Errorf("error checking for user access: %w", err)
+	}
+
+	if !isUserAllowed {
+		return nil, fmt.Errorf("user '%s' is not allowed", user.GetLogin())
 	}
 
 	g.logger.Info("generating token for user", "user", user.GetLogin())
