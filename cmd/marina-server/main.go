@@ -7,7 +7,8 @@ import (
 	"os"
 
 	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
-	"github.com/joshmeranda/marina/pkg/gateway"
+	"github.com/joshmeranda/marina/pkg/drivers/secret"
+	marinagateway "github.com/joshmeranda/marina/pkg/gateway"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -62,10 +63,15 @@ func Start(ctx *cli.Context) error {
 	}
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
+	secretDriver := secret.NewMemoryDriver(map[string]secret.Secret{
+		marinagateway.TokenSigningSecretName: {
+			marinagateway.TokenSigningSecretField: []byte("secret"),
+		},
+	})
+	gateway := marinagateway.NewGateway(client, logger, secretDriver)
 
-	server := grpc.NewServer(grpc.ChainUnaryInterceptor(gateway.LoggingInterceptor(logger), gateway.TokenAuthInterceptor(logger)))
+	server := grpc.NewServer(grpc.ChainUnaryInterceptor(marinagateway.LoggingInterceptor(logger), gateway.TokenAuthInterceptor()))
 
-	gateway := gateway.NewGateway(client, logger)
 	gateway.Register(server)
 
 	logger.Info("starting server", "addr", addr)

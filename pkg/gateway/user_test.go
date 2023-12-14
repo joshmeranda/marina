@@ -7,6 +7,7 @@ import (
 
 	terminalv1 "github.com/joshmeranda/marina-operator/api/v1"
 	"github.com/joshmeranda/marina/pkg/apis/user"
+	"github.com/joshmeranda/marina/pkg/drivers/secret"
 	"github.com/joshmeranda/marina/pkg/gateway"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -25,7 +26,12 @@ var _ = Describe("Gateway User Service", Ordered, func() {
 	BeforeAll(func() {
 		namespace = "marina-system"
 		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
-		g = gateway.NewGateway(k8sClient, logger)
+		secretDriver := secret.NewMemoryDriver(map[string]secret.Secret{
+			gateway.TokenSigningSecretName: {
+				gateway.TokenSigningSecretField: []byte("secret"),
+			},
+		})
+		g = gateway.NewGateway(k8sClient, logger, secretDriver)
 		k8sClient.Create(context.Background(), &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      namespace,
