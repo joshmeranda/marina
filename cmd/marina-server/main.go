@@ -63,7 +63,7 @@ func Start(ctx *cli.Context) error {
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
 
-	server := grpc.NewServer(grpc.UnaryInterceptor(gateway.LoggingInterceptor(logger)))
+	server := grpc.NewServer(grpc.ChainUnaryInterceptor(gateway.LoggingInterceptor(logger), gateway.TokenAuthInterceptor(logger)))
 
 	gateway := gateway.NewGateway(client, logger)
 	gateway.Register(server)

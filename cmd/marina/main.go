@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/joshmeranda/marina/pkg/apis/auth"
@@ -19,12 +20,15 @@ import (
 var Version string
 
 func getClient(ctx *cli.Context) (*client.Client, error) {
-	conn, err := grpc.Dial(ctx.String("address"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// todo: use real transport credentials
+	conn, err := grpc.Dial(ctx.String("address"), grpc.WithUnaryInterceptor(client.TokenAuthInterceptor(os.Getenv("MARINA_BEARER_TOKEN"))), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}
 
-	return client.NewClient(conn), nil
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
+
+	return client.NewClient(conn, logger), nil
 }
 
 func Create(ctx *cli.Context) error {
@@ -91,7 +95,9 @@ func HealthCheck(ctx *cli.Context) error {
 }
 
 func Login(ctx *cli.Context) error {
-	req := &auth.LoginRequest{}
+	req := &auth.LoginRequest{
+		Token: os.Getenv("MARINA_OAUTH_TOKEN"),
+	}
 
 	client, err := getClient(ctx)
 	if err != nil {

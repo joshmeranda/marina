@@ -16,7 +16,7 @@ const (
 	ClientId string = "614fad3dd8cd7deb6892"
 )
 
-func (g *Client) getAccessToken(ctx context.Context, req *auth.LoginRequest) (*api.AccessToken, error) {
+func (c *Client) getAccessToken(ctx context.Context, req *auth.LoginRequest) (*api.AccessToken, error) {
 	flow := oauth.Flow{
 		Host:     oauth.GitHubHost("https://github.com"),
 		Scopes:   []string{"read:user"},
@@ -31,9 +31,10 @@ func (g *Client) getAccessToken(ctx context.Context, req *auth.LoginRequest) (*a
 	return token, nil
 }
 
-func (g *Client) Login(ctx context.Context, req *auth.LoginRequest, opts ...grpc.CallOption) (*auth.LoginResponse, error) {
+func (c *Client) Login(ctx context.Context, req *auth.LoginRequest, opts ...grpc.CallOption) (*auth.LoginResponse, error) {
 	if req.Token == "" {
-		token, err := g.getAccessToken(ctx, req)
+		c.logger.Info("no access token found, must authenticate with oauth provider")
+		token, err := c.getAccessToken(ctx, req)
 		if err != nil {
 			return nil, fmt.Errorf("error getting access token: %w", err)
 		}
@@ -41,7 +42,9 @@ func (g *Client) Login(ctx context.Context, req *auth.LoginRequest, opts ...grpc
 		req.Token = token.Token
 	}
 
-	resp, err := g.authClient.Login(ctx, req)
+	c.logger.Info("requesting token from server")
+
+	resp, err := c.authClient.Login(ctx, req)
 	if err != nil {
 		return nil, err
 	}

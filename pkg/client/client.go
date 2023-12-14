@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"os/exec"
 
@@ -11,7 +12,16 @@ import (
 	"github.com/joshmeranda/marina/pkg/apis/user"
 	"google.golang.org/grpc"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/metadata"
 )
+
+func TokenAuthInterceptor(token string) grpc.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+		ctx = metadata.AppendToOutgoingContext(ctx, "token", token)
+		err := invoker(ctx, method, req, reply, cc, opts...)
+		return err
+	}
+}
 
 type Client struct {
 	terminalClient terminal.TerminalServiceClient
@@ -19,15 +29,17 @@ type Client struct {
 	authClient     auth.AuthServiceClient
 
 	health healthgrpc.HealthClient
+	logger *slog.Logger
 }
 
-func NewClient(conn grpc.ClientConnInterface) *Client {
+func NewClient(conn grpc.ClientConnInterface, logger *slog.Logger) *Client {
 	return &Client{
 		terminalClient: terminal.NewTerminalServiceClient(conn),
 		userClient:     user.NewUserServiceClient(conn),
 		authClient:     auth.NewAuthServiceClient(conn),
 
 		health: healthgrpc.NewHealthClient(conn),
+		logger: logger,
 	}
 }
 

@@ -4,6 +4,7 @@ go 1.21.0
 
 require (
 	github.com/cli/oauth v1.0.1
+	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/golang/protobuf v1.5.3
 	github.com/google/go-github/v57 v57.0.0
 	github.com/joshmeranda/marina-operator v0.0.0-20231211045715-e29fc3be06c1
@@ -21,7 +22,6 @@ require (
 require (
 	github.com/cli/browser v1.0.0 // indirect
 	github.com/cli/safeexec v1.0.0 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 )
 
