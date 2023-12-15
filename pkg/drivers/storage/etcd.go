@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"go.etcd.io/etcd/clientv3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 type Marshaller func(v any) ([]byte, error)
@@ -20,6 +20,9 @@ type etcdStore[V any] struct {
 func NewEtcdStore[V any](kv clientv3.KV, marshaller Marshaller, unmarshaller Unmarshaller) KeyValueStore[string, V] {
 	return &etcdStore[V]{
 		kv: kv,
+
+		marshaller:   marshaller,
+		unmarshaller: unmarshaller,
 	}
 }
 

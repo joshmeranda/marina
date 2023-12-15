@@ -1,9 +1,5 @@
 package marina
 
-import (
-	"slices"
-)
-
 type AccessType int
 
 const (
@@ -14,29 +10,45 @@ const (
 
 // AccessList is a list of names are that either Allowed or Denied.
 type AccessList struct {
-	AllowList []string `json:"allowList,omitempty"`
-	DenyList  []string `json:"denyList,omitempty"`
+	inner map[string]AccessType
 }
 
-func (l AccessList) GetAcecssFor(name string) AccessType {
-	if slices.Contains(l.AllowList, name) {
-		return AccessTypeAllow
+func (l *AccessList) SetAccessFor(name string, accessType AccessType) {
+	if accessType == AccessTypeUnknown {
+		delete(l.inner, name)
 	}
 
-	if slices.Contains(l.DenyList, name) {
-		return AccessTypeDeny
+	if l.inner == nil {
+		l.inner = make(map[string]AccessType)
 	}
 
-	return AccessTypeUnknown
+	l.inner[name] = accessType
+}
+
+func (l *AccessList) GetAccessFor(name string) AccessType {
+	accessType, ok := l.inner[name]
+	if !ok {
+		return AccessTypeUnknown
+	}
+
+	return accessType
 }
 
 type UserAccessList struct {
-	UserList AccessList `json:"userList,omitempty"`
-	OrgList  AccessList `json:"orgList,omitempty"`
+	UserList  AccessList `json:"userList,omitempty"`
+	GroupList AccessList `json:"orgList,omitempty"`
 }
 
-func (l UserAccessList) GetAccessFor(name string, orgs []string) AccessType {
-	userAccess := l.UserList.GetAcecssFor(name)
+func (l *UserAccessList) SetAccessForUser(name string, accessType AccessType) {
+	l.UserList.SetAccessFor(name, accessType)
+}
+
+func (l *UserAccessList) SetAccessForGroup(name string, accessType AccessType) {
+	l.GroupList.SetAccessFor(name, accessType)
+}
+
+func (l *UserAccessList) GetAccessFor(name string, groups []string) AccessType {
+	userAccess := l.UserList.GetAccessFor(name)
 
 	if userAccess == AccessTypeAllow {
 		return AccessTypeAllow
@@ -46,14 +58,14 @@ func (l UserAccessList) GetAccessFor(name string, orgs []string) AccessType {
 		return AccessTypeDeny
 	}
 
-	for _, org := range orgs {
-		orgAccess := l.OrgList.GetAcecssFor(org)
+	for _, group := range groups {
+		groupAccess := l.GroupList.GetAccessFor(group)
 
-		if orgAccess == AccessTypeAllow {
+		if groupAccess == AccessTypeAllow {
 			return AccessTypeAllow
 		}
 
-		if orgAccess == AccessTypeDeny {
+		if groupAccess == AccessTypeDeny {
 			return AccessTypeDeny
 		}
 	}

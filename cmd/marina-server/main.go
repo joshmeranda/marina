@@ -7,7 +7,9 @@ import (
 	"os"
 
 	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
+	marina "github.com/joshmeranda/marina/pkg"
 	"github.com/joshmeranda/marina/pkg/drivers/secret"
+	"github.com/joshmeranda/marina/pkg/drivers/storage"
 	marinagateway "github.com/joshmeranda/marina/pkg/gateway"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
@@ -68,7 +70,9 @@ func Start(ctx *cli.Context) error {
 			marinagateway.TokenSigningSecretField: []byte("secret"),
 		},
 	})
-	gateway := marinagateway.NewGateway(client, logger, secretDriver)
+	accessListStore := storage.NewMemoryStore[string, marina.UserAccessList]() // todo: use etcd storage driver
+
+	gateway := marinagateway.NewGateway(client, logger, secretDriver, accessListStore)
 
 	server := grpc.NewServer(grpc.ChainUnaryInterceptor(marinagateway.LoggingInterceptor(logger), gateway.TokenAuthInterceptor()))
 
