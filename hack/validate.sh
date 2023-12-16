@@ -7,9 +7,8 @@ check_git() {
 	if [ -n "$status" ]; then
 		echo git is no longer clean
 		echo "$status"	
+		exit 1
 	fi
-
-	exit 1
 }
 
 check() {
