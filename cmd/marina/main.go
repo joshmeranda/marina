@@ -19,9 +19,27 @@ import (
 
 var Version string
 
+var cm *ConfigManager
+
+func init() {
+	var err error
+	cm, err = NewDefualtConfigManager()
+	if err != nil {
+		panic(err)
+	}
+}
+
 func getClient(ctx *cli.Context) (*client.Client, error) {
+	bearerToken, err := cm.GetBearerToken()
+	if err != nil {
+		return nil, fmt.Errorf("could not get bearer token: %w", err)
+	}
+
 	// todo: use real transport credentials
-	conn, err := grpc.Dial(ctx.String("address"), grpc.WithUnaryInterceptor(client.TokenAuthInterceptor(os.Getenv("MARINA_BEARER_TOKEN"))), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(ctx.String("address"),
+		grpc.WithUnaryInterceptor(client.TokenAuthInterceptor(bearerToken)),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -95,8 +113,13 @@ func HealthCheck(ctx *cli.Context) error {
 }
 
 func Login(ctx *cli.Context) error {
+	ghAccessToken, err := cm.GetGhAccessToken()
+	if err != nil {
+		return fmt.Errorf("could not get github access token: %w", err)
+	}
+
 	req := &auth.LoginRequest{
-		Token: os.Getenv("MARINA_OAUTH_TOKEN"),
+		Token: ghAccessToken,
 	}
 
 	client, err := getClient(ctx)
