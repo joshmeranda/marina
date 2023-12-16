@@ -25,8 +25,7 @@ const (
 type customDataClaims struct {
 	jwt.RegisteredClaims
 
-	User          string   `json:"user,omitempty"`
-	Organizations []string `json:"organizations,omitempty"`
+	User string `json:"user,omitempty"`
 }
 
 func (g *Gateway) TokenAuthInterceptor() grpc.UnaryServerInterceptor {
@@ -58,8 +57,13 @@ func (g *Gateway) TokenAuthInterceptor() grpc.UnaryServerInterceptor {
 			return nil, fmt.Errorf("unsupported token claim type: %t", token.Claims)
 		}
 
-		// todo: check that the user exists
-		_ = customClaim
+		client := github.NewClient(nil)
+
+		if isUserAllowed, err := g.isUserAllowed(ctx, client, customClaim.User); err != nil {
+			return nil, fmt.Errorf("error checking for user access: %w", err)
+		} else if !isUserAllowed {
+			return nil, fmt.Errorf("user '%s' is not allowed", customClaim.User)
+		}
 
 		resp, err = handler(ctx, req)
 
@@ -67,13 +71,13 @@ func (g *Gateway) TokenAuthInterceptor() grpc.UnaryServerInterceptor {
 	}
 }
 
-func (g *Gateway) isUserAllowed(ctx context.Context, ghClient *github.Client, user *github.User) (bool, error) {
+func (g *Gateway) isUserAllowed(ctx context.Context, ghClient *github.Client, username string) (bool, error) {
 	orgs, _, err := ghClient.Organizations.List(context.Background(), "", nil)
 	if err != nil {
 		return false, fmt.Errorf("could not retrieve user organizations: %w", err)
 	}
 
-	orgNames := make([]string, len(orgs), len(orgs))
+	orgNames := make([]string, len(orgs))
 	for i, org := range orgs {
 		orgNames[i] = org.GetLogin()
 	}
@@ -83,7 +87,7 @@ func (g *Gateway) isUserAllowed(ctx context.Context, ghClient *github.Client, us
 		return false, fmt.Errorf("could not retrieve user access list: %w", err)
 	}
 
-	switch accessType := list.GetAccessFor(user.GetLogin(), orgNames); accessType {
+	switch accessType := list.GetAccessFor(username, orgNames); accessType {
 	case marina.AccessTypeAllow:
 		return true, nil
 	case marina.AccessTypeDeny | marina.AccessTypeUnknown:
@@ -94,7 +98,6 @@ func (g *Gateway) isUserAllowed(ctx context.Context, ghClient *github.Client, us
 }
 
 func (g *Gateway) Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
-	// todo: check against white / black listed users
 	client := github.NewClient(nil).WithAuthToken(req.Token)
 
 	user, _, err := client.Users.Get(ctx, "")
@@ -102,7 +105,7 @@ func (g *Gateway) Login(ctx context.Context, req *auth.LoginRequest) (*auth.Logi
 		return nil, err
 	}
 
-	isUserAllowed, err := g.isUserAllowed(ctx, client, user)
+	isUserAllowed, err := g.isUserAllowed(ctx, client, user.GetLogin())
 	if err != nil {
 		return nil, fmt.Errorf("error checking for user access: %w", err)
 	}
