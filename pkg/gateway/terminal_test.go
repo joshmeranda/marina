@@ -6,11 +6,8 @@ import (
 	"os"
 
 	terminalv1 "github.com/joshmeranda/marina-operator/api/v1"
-	marina "github.com/joshmeranda/marina/pkg"
 	"github.com/joshmeranda/marina/pkg/apis/core"
 	"github.com/joshmeranda/marina/pkg/apis/terminal"
-	"github.com/joshmeranda/marina/pkg/drivers/secret"
-	"github.com/joshmeranda/marina/pkg/drivers/storage"
 	"github.com/joshmeranda/marina/pkg/gateway"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -26,15 +23,12 @@ var _ = Describe("Gateway Terminal Service", Ordered, func() {
 	var namespace string
 
 	BeforeAll(func() {
+		var err error
 		namespace = "marina-system"
 		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
-		secretDriver := secret.NewMemoryDriver(map[string]secret.Secret{
-			gateway.TokenSigningSecretName: {
-				gateway.TokenSigningSecretField: []byte("secret"),
-			},
-		})
-		accessListStore := storage.NewMemoryStore[string, marina.UserAccessList]()
-		g = gateway.NewGateway(k8sClient, logger, secretDriver, accessListStore)
+
+		g, err = gateway.NewGateway(gateway.WithLogger(logger), gateway.WithKubeClient(k8sClient))
+		Expect(err).ToNot(HaveOccurred())
 		k8sClient.Create(context.Background(), &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      namespace,

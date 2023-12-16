@@ -2,8 +2,12 @@ package gateway
 
 import (
 	"context"
+	"crypto/rand"
+	"fmt"
 	"log/slog"
+	"os"
 
+	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
 	marina "github.com/joshmeranda/marina/pkg"
 	"github.com/joshmeranda/marina/pkg/apis/auth"
 	"github.com/joshmeranda/marina/pkg/apis/terminal"
@@ -13,6 +17,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -36,22 +42,64 @@ type Gateway struct {
 
 	health healthgrpc.HealthServer
 
-	kubeClient   client.Client
-	logger       *slog.Logger
-	secretDriver secret.Driver
-
+	kubeClient      client.Client
+	logger          *slog.Logger
+	secretDriver    secret.Driver
 	accessListStore storage.KeyValueStore[string, marina.UserAccessList]
 }
 
-// todo: convert to use options...
-func NewGateway(client client.Client, logger *slog.Logger, secretDriver secret.Driver, accessListStore storage.KeyValueStore[string, marina.UserAccessList]) *Gateway {
-	return &Gateway{
-		kubeClient:      client,
-		health:          health.NewServer(),
-		logger:          logger,
-		secretDriver:    secretDriver,
-		accessListStore: accessListStore,
+func NewGateway(opts ...Option) (*Gateway, error) {
+	gateway := &Gateway{
+		health: health.NewServer(),
 	}
+
+	for _, opt := range opts {
+		opt(gateway)
+	}
+
+	if gateway.kubeClient == nil {
+		config, err := rest.InClusterConfig()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get in-cluster config: %w", err)
+		}
+
+		schema := runtime.NewScheme()
+		if err := marinav1.AddToScheme(schema); err != nil {
+			return nil, fmt.Errorf("failed to add marina scheme: %w", err)
+		}
+
+		opts := client.Options{
+			Scheme: schema,
+		}
+
+		gateway.kubeClient, err = client.New(config, opts)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create client: %w", err)
+		}
+	}
+
+	if gateway.logger == nil {
+		gateway.logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
+	}
+
+	if gateway.secretDriver == nil {
+		signingKey := make([]byte, 10)
+		if _, err := rand.Read(signingKey); err != nil {
+			return nil, fmt.Errorf("error generating signing key: %w", err)
+		}
+
+		gateway.secretDriver = secret.NewMemoryDriver(map[string]secret.Secret{
+			TokenSigningSecretName: {
+				TokenSigningSecretField: signingKey,
+			},
+		})
+	}
+
+	if gateway.accessListStore == nil {
+		gateway.accessListStore = storage.NewMemoryStore[string, marina.UserAccessList]()
+	}
+
+	return gateway, nil
 }
 
 func (g *Gateway) Register(s *grpc.Server) {

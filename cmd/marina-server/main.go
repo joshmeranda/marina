@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net"
@@ -10,8 +11,10 @@ import (
 	marina "github.com/joshmeranda/marina/pkg"
 	"github.com/joshmeranda/marina/pkg/drivers/secret"
 	"github.com/joshmeranda/marina/pkg/drivers/storage"
+	"github.com/joshmeranda/marina/pkg/gateway"
 	marinagateway "github.com/joshmeranda/marina/pkg/gateway"
 	"github.com/urfave/cli/v2"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -50,6 +53,16 @@ func getClusterClient(ctx *cli.Context) (client.Client, error) {
 	return client, nil
 }
 
+func getEtcdClient(ctx *cli.Context) (*clientv3.Client, error) {
+	config := clientv3.Config{}
+	client, err := clientv3.New(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
+
 func Start(ctx *cli.Context) error {
 	port := ctx.Int("port")
 	addr := fmt.Sprintf(":%d", port)
@@ -65,14 +78,23 @@ func Start(ctx *cli.Context) error {
 	}
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
-	secretDriver := secret.NewMemoryDriver(map[string]secret.Secret{
-		marinagateway.TokenSigningSecretName: {
-			marinagateway.TokenSigningSecretField: []byte("secret"),
-		},
-	})
-	accessListStore := storage.NewMemoryStore[string, marina.UserAccessList]() // todo: use etcd storage driver
+	secretDriver := secret.NewKubeDriver(client, "marina-system")
 
-	gateway := marinagateway.NewGateway(client, logger, secretDriver, accessListStore)
+	etcdClient, err := getEtcdClient(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to create etcd client: %w", err)
+	}
+	storageDriver := storage.NewEtcdStore[marina.UserAccessList](etcdClient, json.Marshal, json.Unmarshal)
+
+	gateway, err := marinagateway.NewGateway(
+		gateway.WithLogger(logger),
+		gateway.WithKubeClient(client),
+		gateway.WithSecretDriver(secretDriver),
+		gateway.WithAccessListStore(storageDriver),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create gateway: %w", err)
+	}
 
 	server := grpc.NewServer(grpc.ChainUnaryInterceptor(marinagateway.LoggingInterceptor(logger), gateway.TokenAuthInterceptor()))
 
