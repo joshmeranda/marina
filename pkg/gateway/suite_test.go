@@ -1,6 +1,9 @@
 package gateway_test
 
 import (
+	"fmt"
+	"math"
+	"math/rand"
 	"path/filepath"
 	"testing"
 
@@ -61,3 +64,13 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
+
+func generateNamespaceName() (string, error) {
+	length := 10
+	suffixMin := int(math.Pow10(length))
+	suffixMax := int(math.Pow10(length+1) - 1)
+
+	suffix := rand.Intn(suffixMax-suffixMin) + suffixMin
+
+	return fmt.Sprintf("marina-system-%d", suffix), nil
+}

@@ -24,10 +24,13 @@ var _ = Describe("Gateway Terminal Service", Ordered, func() {
 
 	BeforeAll(func() {
 		var err error
-		namespace = "marina-system"
+
+		namespace, err = generateNamespaceName()
+		Expect(err).ToNot(HaveOccurred())
+
 		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
 
-		g, err = gateway.NewGateway(gateway.WithLogger(logger), gateway.WithKubeClient(k8sClient))
+		g, err = gateway.NewGateway(gateway.WithLogger(logger), gateway.WithKubeClient(k8sClient), gateway.WithNamespace(namespace))
 		Expect(err).ToNot(HaveOccurred())
 		k8sClient.Create(context.Background(), &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{

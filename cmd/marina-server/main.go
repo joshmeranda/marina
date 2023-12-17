@@ -11,7 +11,6 @@ import (
 	marina "github.com/joshmeranda/marina/pkg"
 	"github.com/joshmeranda/marina/pkg/drivers/secret"
 	"github.com/joshmeranda/marina/pkg/drivers/storage"
-	"github.com/joshmeranda/marina/pkg/gateway"
 	marinagateway "github.com/joshmeranda/marina/pkg/gateway"
 	"github.com/urfave/cli/v2"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -87,13 +86,18 @@ func Start(ctx *cli.Context) error {
 	storageDriver := storage.NewEtcdStore[marina.UserAccessList](etcdClient, json.Marshal, json.Unmarshal)
 
 	gateway, err := marinagateway.NewGateway(
-		gateway.WithLogger(logger),
-		gateway.WithKubeClient(client),
-		gateway.WithSecretDriver(secretDriver),
-		gateway.WithAccessListStore(storageDriver),
+		marinagateway.WithLogger(logger),
+		marinagateway.WithKubeClient(client),
+		marinagateway.WithSecretDriver(secretDriver),
+		marinagateway.WithAccessListStore(storageDriver),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create gateway: %w", err)
+	}
+
+	err = gateway.Bootstrap(ctx.Context)
+	if err != nil {
+		return fmt.Errorf("failed to bootstrap marina gateway: %w", err)
 	}
 
 	server := grpc.NewServer(grpc.ChainUnaryInterceptor(marinagateway.LoggingInterceptor(logger), gateway.TokenAuthInterceptor()))

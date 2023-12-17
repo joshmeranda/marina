@@ -19,7 +19,7 @@ func (g *Gateway) allRolesExist(roles []string) bool {
 		var role rbacv1.Role
 		err := g.kubeClient.Get(context.Background(), types.NamespacedName{
 			Name:      roleName,
-			Namespace: "marina-system",
+			Namespace: g.namespace,
 		}, &role)
 
 		if errors.IsNotFound(err) {
@@ -34,7 +34,7 @@ func (g *Gateway) CreateUser(ctx context.Context, req *user.UserCreateRequest) (
 	user := marinav1.User{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      req.User.Name,
-			Namespace: "marina-system",
+			Namespace: g.namespace,
 		},
 		Spec: marinav1.UserSpec{
 			Name:  req.User.Name,
@@ -57,7 +57,7 @@ func (g *Gateway) DeleteUser(ctx context.Context, req *user.UserDeleteRequest) (
 	user := marinav1.User{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      req.Name,
-			Namespace: "marina-system",
+			Namespace: g.namespace,
 		},
 	}
 
@@ -72,7 +72,7 @@ func (g *Gateway) UpdateUser(ctx context.Context, req *user.UserUpdateRequest) (
 	var user marinav1.User
 	if err := g.kubeClient.Get(ctx, types.NamespacedName{
 		Name:      req.User.Name,
-		Namespace: "marina-system",
+		Namespace: g.namespace,
 	}, &user); err != nil {
 		return nil, err
 	}

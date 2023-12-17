@@ -22,6 +22,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	DefaultNamespace string = "marina-system"
+)
+
 func LoggingInterceptor(l *slog.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		l.Info("gRPC method call", "method", info.FullMethod)
@@ -46,6 +50,7 @@ type Gateway struct {
 	logger          *slog.Logger
 	secretDriver    secret.Driver
 	accessListStore storage.KeyValueStore[string, marina.UserAccessList]
+	namespace       string
 }
 
 func NewGateway(opts ...Option) (*Gateway, error) {
@@ -97,6 +102,10 @@ func NewGateway(opts ...Option) (*Gateway, error) {
 
 	if gateway.accessListStore == nil {
 		gateway.accessListStore = storage.NewMemoryStore[string, marina.UserAccessList]()
+	}
+
+	if gateway.namespace == "" {
+		gateway.namespace = DefaultNamespace
 	}
 
 	return gateway, nil

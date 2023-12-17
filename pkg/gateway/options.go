@@ -34,3 +34,9 @@ func WithAccessListStore(store storage.KeyValueStore[string, marina.UserAccessLi
 		g.accessListStore = store
 	}
 }
+
+func WithNamespace(namespace string) Option {
+	return func(g *Gateway) {
+		g.namespace = namespace
+	}
+}
