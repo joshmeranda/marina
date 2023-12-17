@@ -90,6 +90,7 @@ func Start(ctx *cli.Context) error {
 		marinagateway.WithKubeClient(client),
 		marinagateway.WithSecretDriver(secretDriver),
 		marinagateway.WithAccessListStore(storageDriver),
+		marinagateway.WithNamespace(ctx.String("namespace")),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create gateway: %w", err)
@@ -119,6 +120,12 @@ func main() {
 		Version:     Version,
 		Description: "run the marina gateay server",
 		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "namespace",
+				Aliases: []string{"n"},
+				Usage:   "The name space to use for managin k8s resources",
+				Value:   marinagateway.DefaultNamespace,
+			},
 			&cli.IntFlag{
 				Name:    "port",
 				Usage:   "the port for the gateway to listen on",
