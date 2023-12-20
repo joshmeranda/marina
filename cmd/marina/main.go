@@ -119,7 +119,7 @@ func Login(ctx *cli.Context) error {
 	}
 
 	req := &auth.LoginRequest{
-		Token: ghAccessToken,
+		Secret: ghAccessToken,
 	}
 
 	client, err := getClient(ctx)
@@ -166,9 +166,17 @@ func main() {
 				Action:      HealthCheck,
 			},
 			{
-				Name:        "login",
-				Description: "get and store gateway authentication credentials",
-				Action:      Login,
+				Name: "auth",
+				Subcommands: []*cli.Command{
+					{
+						Name:        "login",
+						Description: "get and store gateway authentication credentials",
+						Action:      Login,
+					},
+					{
+						Name: "store",
+					},
+				},
 			},
 		},
 		Flags: []cli.Flag{

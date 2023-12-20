@@ -31,18 +31,16 @@ func (c *Client) getAccessToken(ctx context.Context, req *auth.LoginRequest) (*a
 	return token, nil
 }
 
-func (c *Client) Login(ctx context.Context, req *auth.LoginRequest, opts ...grpc.CallOption) (*auth.LoginResponse, error) {
-	if req.Token == "" {
+func (c *Client) githubLogin(ctx context.Context, req *auth.LoginRequest, opts ...grpc.CallOption) (*auth.LoginResponse, error) {
+	if req.Secret == "" {
 		c.logger.Info("no access token found, must authenticate with oauth provider")
 		token, err := c.getAccessToken(ctx, req)
 		if err != nil {
 			return nil, fmt.Errorf("error getting access token: %w", err)
 		}
 
-		req.Token = token.Token
+		req.Secret = token.Token
 	}
-
-	c.logger.Info("requesting token from server")
 
 	resp, err := c.authClient.Login(ctx, req)
 	if err != nil {
@@ -52,4 +50,26 @@ func (c *Client) Login(ctx context.Context, req *auth.LoginRequest, opts ...grpc
 	return &auth.LoginResponse{
 		Token: resp.Token,
 	}, nil
+}
+
+func (c *Client) marinaLogin(ctx context.Context, req *auth.LoginRequest, opts ...grpc.CallOption) (*auth.LoginResponse, error) {
+	resp, err := c.authClient.Login(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &auth.LoginResponse{
+		Token: resp.Token,
+	}, nil
+}
+
+func (c *Client) Login(ctx context.Context, req *auth.LoginRequest, opts ...grpc.CallOption) (*auth.LoginResponse, error) {
+	switch req.SecretType {
+	case auth.SecretType_Github:
+		return c.githubLogin(ctx, req, opts...)
+	case auth.SecretType_Password:
+		return c.marinaLogin(ctx, req, opts...)
+	default:
+		return nil, fmt.Errorf("recevied unknown token kind: %s", req.SecretType.String())
+	}
 }

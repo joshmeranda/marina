@@ -4,8 +4,9 @@ import (
 	"log/slog"
 
 	marina "github.com/joshmeranda/marina/pkg"
-	"github.com/joshmeranda/marina/pkg/drivers/secret"
-	"github.com/joshmeranda/marina/pkg/drivers/storage"
+	"github.com/joshmeranda/marina/pkg/gateway/drivers/auth"
+	"github.com/joshmeranda/marina/pkg/gateway/drivers/secret"
+	"github.com/joshmeranda/marina/pkg/gateway/drivers/storage"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -38,5 +39,11 @@ func WithAccessListStore(store storage.KeyValueStore[string, marina.UserAccessLi
 func WithNamespace(namespace string) Option {
 	return func(g *Gateway) {
 		g.namespace = namespace
+	}
+}
+
+func WithAuthDriver(driver auth.Driver) Option {
+	return func(g *Gateway) {
+		g.authDriver = driver
 	}
 }

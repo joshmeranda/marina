@@ -9,9 +9,9 @@ import (
 
 	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
 	marina "github.com/joshmeranda/marina/pkg"
-	"github.com/joshmeranda/marina/pkg/drivers/secret"
-	"github.com/joshmeranda/marina/pkg/drivers/storage"
 	marinagateway "github.com/joshmeranda/marina/pkg/gateway"
+	"github.com/joshmeranda/marina/pkg/gateway/drivers/secret"
+	"github.com/joshmeranda/marina/pkg/gateway/drivers/storage"
 	"github.com/urfave/cli/v2"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"

@@ -8,12 +8,18 @@ service AuthService {
 	rpc Login(LoginRequest) returns (LoginResponse) {}
 }
 
+enum SecretType {
+	Unknown = 0;
+	Password = 1;
+	Github = 2;
+}
+
 message LoginRequest {
-	// token is the access token received from the OAuth2 provider
-	string token = 1;
+	string Secret = 1;
+	SecretType secretType = 2;
+	string user = 3;
 }
 
 message LoginResponse {
-	// token is the bearer token to be used for future requests
 	string token = 1;
 }

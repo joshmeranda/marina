@@ -13,6 +13,9 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+// todo: device flow with refres
+// todo: admin user login crednetials
+
 var _ auth.AuthServiceServer = &Gateway{}
 
 const (
@@ -97,24 +100,8 @@ func (g *Gateway) isUserAllowed(ctx context.Context, ghClient *github.Client, us
 	}
 }
 
-func (g *Gateway) Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
-	client := github.NewClient(nil).WithAuthToken(req.Token)
-
-	user, _, err := client.Users.Get(ctx, "")
-	if err != nil {
-		return nil, err
-	}
-
-	isUserAllowed, err := g.isUserAllowed(ctx, client, user.GetLogin())
-	if err != nil {
-		return nil, fmt.Errorf("error checking for user access: %w", err)
-	}
-
-	if !isUserAllowed {
-		return nil, fmt.Errorf("user '%s' is not allowed", user.GetLogin())
-	}
-
-	g.logger.Info("generating token for user", "user", user.GetLogin())
+func (g *Gateway) generateTokenForUser(ctx context.Context, user string) (string, error) {
+	g.logger.Info("generating token for user", "user", user)
 
 	claims := customDataClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -124,21 +111,70 @@ func (g *Gateway) Login(ctx context.Context, req *auth.LoginRequest) (*auth.Logi
 				Time: time.Now().Add(24 * time.Hour * 7),
 			},
 		},
-		User: user.GetLogin(),
+		User: user,
 	}
 
 	signingKey, err := g.secretDriver.Get(ctx, TokenSigningSecretName, TokenSigningSecretField)
 	if err != nil {
-		return nil, fmt.Errorf("could not get data from secret '%s' at field '%s'", TokenSigningSecretName, TokenSigningSecretField)
+		return "", fmt.Errorf("could not get data from secret '%s' at field '%s'", TokenSigningSecretName, TokenSigningSecretField)
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	bearerToken, err := token.SignedString(signingKey)
 	if err != nil {
-		return nil, err
+		return "", err
+	}
+
+	return bearerToken, nil
+}
+
+func (g *Gateway) githubLogin(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
+	if err := g.authDriver.Authenticate(ctx, req); err != nil {
+		return nil, fmt.Errorf("could not authenticate user '%s': %w", req.User, err)
+	}
+
+	// isUserAllowed, err := g.isUserAllowed(ctx, client, user.GetLogin())
+	// if err != nil {
+	// 	return nil, fmt.Errorf("error checking for user access: %w", err)
+	// }
+
+	// if !isUserAllowed {
+	// 	return nil, fmt.Errorf("user '%s' is not allowed", user.GetLogin())
+	// }
+
+	bearerToken, err := g.generateTokenForUser(ctx, req.User)
+	if err != nil {
+		return nil, fmt.Errorf("could not generate token for user '%s': %w", req.User, err)
 	}
 
 	return &auth.LoginResponse{
 		Token: bearerToken,
 	}, nil
+}
+
+func (g *Gateway) marinaLogin(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
+	if err := g.authDriver.Authenticate(ctx, req); err != nil {
+		return nil, fmt.Errorf("could not authenticate user '%s': %w", req.User, err)
+	}
+
+	// todo: ideally we'd be able to prevent users from abusing the costliness of this operation (cache?)
+	bearerToken, err := g.generateTokenForUser(ctx, req.User)
+	if err != nil {
+		return nil, fmt.Errorf("could not generate token for user '%s': %w", req.User, err)
+	}
+
+	return &auth.LoginResponse{
+		Token: bearerToken,
+	}, nil
+}
+
+func (g *Gateway) Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
+	switch req.SecretType {
+	case auth.SecretType_Github:
+		return g.githubLogin(ctx, req)
+	case auth.SecretType_Password:
+		return g.marinaLogin(ctx, req)
+	default:
+		return nil, fmt.Errorf("recevied unknown token kind: %s", req.SecretType)
+	}
 }

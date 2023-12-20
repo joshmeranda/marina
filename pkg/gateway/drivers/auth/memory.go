@@ -1,0 +1,32 @@
+package auth
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/joshmeranda/marina/pkg/apis/auth"
+	"github.com/joshmeranda/marina/pkg/gateway/drivers/storage"
+)
+
+type Memory struct {
+	store storage.KeyValueStore[string, string]
+}
+
+func NewMemory() Driver {
+	return &Memory{
+		store: storage.NewMemoryStore[string, string](),
+	}
+}
+
+func (d *Memory) Authenticate(ctx context.Context, req *auth.LoginRequest) error {
+	password, err := d.store.Get(ctx, req.User)
+	if err != nil {
+		return err
+	}
+
+	if password != req.Secret {
+		return fmt.Errorf("password is not valid for user %s", req.User)
+	}
+
+	return nil
+}

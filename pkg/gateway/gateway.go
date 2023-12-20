@@ -12,8 +12,9 @@ import (
 	"github.com/joshmeranda/marina/pkg/apis/auth"
 	"github.com/joshmeranda/marina/pkg/apis/terminal"
 	"github.com/joshmeranda/marina/pkg/apis/user"
-	"github.com/joshmeranda/marina/pkg/drivers/secret"
-	"github.com/joshmeranda/marina/pkg/drivers/storage"
+	authdriver "github.com/joshmeranda/marina/pkg/gateway/drivers/auth"
+	"github.com/joshmeranda/marina/pkg/gateway/drivers/secret"
+	"github.com/joshmeranda/marina/pkg/gateway/drivers/storage"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
@@ -49,8 +50,9 @@ type Gateway struct {
 	kubeClient      client.Client
 	logger          *slog.Logger
 	secretDriver    secret.Driver
-	accessListStore storage.KeyValueStore[string, marina.UserAccessList]
 	namespace       string
+	accessListStore storage.KeyValueStore[string, marina.UserAccessList]
+	authDriver      authdriver.Driver
 }
 
 func NewGateway(opts ...Option) (*Gateway, error) {
@@ -100,12 +102,16 @@ func NewGateway(opts ...Option) (*Gateway, error) {
 		})
 	}
 
+	if gateway.namespace == "" {
+		gateway.namespace = DefaultNamespace
+	}
+
 	if gateway.accessListStore == nil {
 		gateway.accessListStore = storage.NewMemoryStore[string, marina.UserAccessList]()
 	}
 
-	if gateway.namespace == "" {
-		gateway.namespace = DefaultNamespace
+	if gateway.authDriver == nil {
+		gateway.authDriver = authdriver.NewMemory()
 	}
 
 	return gateway, nil
