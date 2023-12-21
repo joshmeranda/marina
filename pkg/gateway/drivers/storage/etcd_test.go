@@ -3,7 +3,7 @@ package storage_test
 import (
 	"context"
 
-	"github.com/joshmeranda/marina/pkg/drivers/storage"
+	"github.com/joshmeranda/marina/pkg/gateway/drivers/storage"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	clientv3 "go.etcd.io/etcd/client/v3"

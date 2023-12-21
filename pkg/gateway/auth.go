@@ -128,53 +128,19 @@ func (g *Gateway) generateTokenForUser(ctx context.Context, user string) (string
 	return bearerToken, nil
 }
 
-func (g *Gateway) githubLogin(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
-	if err := g.authDriver.Authenticate(ctx, req); err != nil {
-		return nil, fmt.Errorf("could not authenticate user '%s': %w", req.User, err)
-	}
-
-	// isUserAllowed, err := g.isUserAllowed(ctx, client, user.GetLogin())
-	// if err != nil {
-	// 	return nil, fmt.Errorf("error checking for user access: %w", err)
-	// }
-
-	// if !isUserAllowed {
-	// 	return nil, fmt.Errorf("user '%s' is not allowed", user.GetLogin())
-	// }
-
-	bearerToken, err := g.generateTokenForUser(ctx, req.User)
-	if err != nil {
-		return nil, fmt.Errorf("could not generate token for user '%s': %w", req.User, err)
-	}
-
-	return &auth.LoginResponse{
-		Token: bearerToken,
-	}, nil
-}
-
-func (g *Gateway) marinaLogin(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
-	if err := g.authDriver.Authenticate(ctx, req); err != nil {
-		return nil, fmt.Errorf("could not authenticate user '%s': %w", req.User, err)
-	}
-
-	// todo: ideally we'd be able to prevent users from abusing the costliness of this operation (cache?)
-	bearerToken, err := g.generateTokenForUser(ctx, req.User)
-	if err != nil {
-		return nil, fmt.Errorf("could not generate token for user '%s': %w", req.User, err)
-	}
-
-	return &auth.LoginResponse{
-		Token: bearerToken,
-	}, nil
-}
-
 func (g *Gateway) Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
-	switch req.SecretType {
-	case auth.SecretType_Github:
-		return g.githubLogin(ctx, req)
-	case auth.SecretType_Password:
-		return g.marinaLogin(ctx, req)
-	default:
-		return nil, fmt.Errorf("recevied unknown token kind: %s", req.SecretType)
+	if err := g.authDriver.Authenticate(ctx, req); err != nil {
+		return nil, fmt.Errorf("could not authenticate user '%s': %w", req.User, err)
 	}
+
+	// todo: deal with access list stuff (might not really need it)
+
+	bearerToken, err := g.generateTokenForUser(ctx, req.User)
+	if err != nil {
+		return nil, fmt.Errorf("could not generate token for user '%s': %w", req.User, err)
+	}
+
+	return &auth.LoginResponse{
+		Token: bearerToken,
+	}, nil
 }

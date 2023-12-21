@@ -7,7 +7,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/golang/protobuf v1.5.3
 	github.com/google/go-github/v57 v57.0.0
-	github.com/joshmeranda/marina-operator v0.0.0-20231211045715-e29fc3be06c1
+	github.com/joshmeranda/marina-operator v0.0.0-20231220223049-fe6820aa9ff7
 	github.com/onsi/ginkgo/v2 v2.11.0
 	github.com/onsi/gomega v1.27.10
 	github.com/urfave/cli/v2 v2.25.7

@@ -3,12 +3,14 @@
 set -e
 
 crd_repo=https://github.com/joshmeranda/marina-operator.git
-commit=e29fc3be06c1
+commit=fe6820aa9ff7
 tag_or_branch=main
 
 temp_dir=$(mktemp --directory update-crds.XXXXXXXXXX)
 src_crd_subdir=config/crd/bases
 dst_crd_dir=$(pwd)/crds
+
+rm --recursive --force "$dst_crd_dir"
 
 cleanup() {	
 	echo cleaning up temp dir "$temp_dir"

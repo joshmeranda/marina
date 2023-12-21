@@ -2,10 +2,13 @@ package auth
 
 import (
 	"context"
+	"fmt"
 
+	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
 	"github.com/joshmeranda/marina/pkg/apis/auth"
-	"github.com/joshmeranda/marina/pkg/gateway/drivers/secret"
 	"golang.org/x/crypto/bcrypt"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -13,22 +16,28 @@ const (
 )
 
 type Local struct {
-	secretStore secret.Driver
+	kubeClient client.Client
+	namespace  string
 }
 
-func NewLocal(secretStore secret.Driver) Driver {
+func NewLocal(kubeClient client.Client, namespace string) Driver {
 	return &Local{
-		secretStore: secretStore,
+		kubeClient: kubeClient,
+		namespace:  namespace,
 	}
 }
 
 func (d *Local) Authenticate(ctx context.Context, req *auth.LoginRequest) error {
-	data, err := d.secretStore.Get(ctx, req.User, passwordFieldName)
+	user := marinav1.User{}
+	err := d.kubeClient.Get(ctx, types.NamespacedName{
+		Name:      req.User,
+		Namespace: d.namespace,
+	}, &user)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to get user: %w", err)
 	}
 
-	if err := bcrypt.CompareHashAndPassword(data, []byte(req.Secret)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Spec.Password), []byte(req.Secret)); err != nil {
 		return err
 	}
 
