@@ -11,15 +11,17 @@ import (
 	"github.com/joshmeranda/marina/pkg/apis/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// todo: device flow with refres
-// todo: admin user login crednetials
+// todo: device flow with refresh tokens
 
 var _ auth.AuthServiceServer = &Gateway{}
 
 const (
-	TokenSigningSecretName  = "jet-signing-key"
+	TokenSigningSecretName  = "jwt-signing-key"
 	TokenSigningSecretField = "value"
 
 	UserAccessFieldKeyName = "user-access-list"
@@ -114,10 +116,17 @@ func (g *Gateway) generateTokenForUser(ctx context.Context, user string) (string
 		User: user,
 	}
 
-	signingKey, err := g.secretDriver.Get(ctx, TokenSigningSecretName, TokenSigningSecretField)
-	if err != nil {
-		return "", fmt.Errorf("could not get data from secret '%s' at field '%s'", TokenSigningSecretName, TokenSigningSecretField)
+	secret := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      TokenSigningSecretName,
+			Namespace: g.namespace,
+		},
 	}
+	if err := g.kubeClient.Get(ctx, client.ObjectKeyFromObject(&secret), &secret); err != nil {
+		return "", fmt.Errorf("could not get signing secret: %w", err)
+	}
+
+	signingKey := secret.Data[TokenSigningSecretField]
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	bearerToken, err := token.SignedString(signingKey)

@@ -2,10 +2,9 @@ package gateway_test
 
 import (
 	"context"
+	"io"
 	"log/slog"
-	"os"
 
-	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
 	"github.com/joshmeranda/marina/pkg/apis/auth"
 	"github.com/joshmeranda/marina/pkg/apis/user"
 	"github.com/joshmeranda/marina/pkg/gateway"
@@ -14,7 +13,6 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Gateway Auth", Ordered, func() {
@@ -28,7 +26,7 @@ var _ = Describe("Gateway Auth", Ordered, func() {
 		namespace, err = generateNamespaceName()
 		Expect(err).ToNot(HaveOccurred())
 
-		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
+		logger = slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{}))
 
 		authDriver := authdriver.NewLocal(k8sClient, namespace)
 
@@ -52,11 +50,16 @@ var _ = Describe("Gateway Auth", Ordered, func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 
-		user := marinav1.User{}
-		err = k8sClient.Get(context.Background(), types.NamespacedName{
-			Name:      "test-user",
-			Namespace: namespace,
-		}, &user)
+		secret := corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      gateway.TokenSigningSecretName,
+				Namespace: namespace,
+			},
+			Data: map[string][]byte{
+				gateway.TokenSigningSecretField: []byte("signing-key"),
+			},
+		}
+		err = k8sClient.Create(context.Background(), &secret)
 		Expect(err).ToNot(HaveOccurred())
 	})
 

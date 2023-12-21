@@ -63,6 +63,34 @@ func (g *Gateway) ensureRole(ctx context.Context) error {
 	return nil
 }
 
+func (g *Gateway) ensureTokenSigningSecret(ctx context.Context) error {
+	signingKey := make([]byte, 512)
+	if _, err := rand.Read(signingKey); err != nil {
+		return fmt.Errorf("failed to generate signing key: %w", err)
+	}
+
+	secret := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      TokenSigningSecretName,
+			Namespace: g.namespace,
+		},
+		Data: map[string][]byte{
+			TokenSigningSecretField: signingKey,
+		},
+	}
+
+	if err := g.kubeClient.Create(ctx, &secret); errors.IsAlreadyExists(err) {
+		g.logger.Debug("signing secret role already exists")
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	g.logger.Info("created signing secret")
+
+	return nil
+}
+
 func (g *Gateway) ensureUser(ctx context.Context) error {
 	secret := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -122,6 +150,10 @@ func (g *Gateway) Bootstrap(ctx context.Context) error {
 
 	if err := g.ensureUser(ctx); err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
+	}
+
+	if err := g.ensureTokenSigningSecret(ctx); err != nil {
+		return fmt.Errorf("failed to create signing secret: %w", err)
 	}
 
 	return nil

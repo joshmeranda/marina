@@ -2,8 +2,8 @@ package gateway_test
 
 import (
 	"context"
+	"io"
 	"log/slog"
-	"os"
 	"sync"
 
 	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
@@ -24,6 +24,20 @@ var _ = Describe("Gateway Bootstrap", Ordered, func() {
 	var user marinav1.User
 	var role rbacv1.Role
 	var secret corev1.Secret
+	var signingToken corev1.Secret
+
+	expectObjectsExists := func(ctx context.Context) {
+		GinkgoHelper()
+
+		err := k8sClient.Get(ctx, client.ObjectKeyFromObject(&user), &user)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&role), &role)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&secret), &secret)
+		Expect(err).ToNot(HaveOccurred())
+	}
 
 	BeforeAll(func() {
 		var err error
@@ -31,9 +45,7 @@ var _ = Describe("Gateway Bootstrap", Ordered, func() {
 		namespace, err = generateNamespaceName()
 		Expect(err).ToNot(HaveOccurred())
 
-		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			Level: slog.LevelDebug,
-		}))
+		logger = slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{}))
 
 		user = marinav1.User{
 			ObjectMeta: metav1.ObjectMeta{
@@ -52,6 +64,13 @@ var _ = Describe("Gateway Bootstrap", Ordered, func() {
 		secret = corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "marina-bootstrap-password",
+				Namespace: namespace,
+			},
+		}
+
+		signingToken = corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      gateway.TokenSigningSecretName,
 				Namespace: namespace,
 			},
 		}
@@ -87,6 +106,9 @@ var _ = Describe("Gateway Bootstrap", Ordered, func() {
 
 		err = k8sClient.Delete(context.Background(), &secret)
 		Expect(err).ToNot(HaveOccurred())
+
+		err = k8sClient.Delete(context.Background(), &signingToken)
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	When("bootstraping in sequence", Ordered, func() {
@@ -95,18 +117,7 @@ var _ = Describe("Gateway Bootstrap", Ordered, func() {
 				err := g.Bootstrap(ctx)
 				Expect(err).ToNot(HaveOccurred())
 
-				user := user
-				role := role
-				secret := secret
-
-				err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&user), &user)
-				Expect(err).ToNot(HaveOccurred())
-
-				err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&role), &role)
-				Expect(err).ToNot(HaveOccurred())
-
-				err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&secret), &secret)
-				Expect(err).ToNot(HaveOccurred())
+				expectObjectsExists(ctx)
 			})
 		})
 
@@ -115,18 +126,7 @@ var _ = Describe("Gateway Bootstrap", Ordered, func() {
 				err := g.Bootstrap(ctx)
 				Expect(err).ToNot(HaveOccurred())
 
-				user := user
-				role := role
-				secret := secret
-
-				err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&user), &user)
-				Expect(err).ToNot(HaveOccurred())
-
-				err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&role), &role)
-				Expect(err).ToNot(HaveOccurred())
-
-				err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&secret), &secret)
-				Expect(err).ToNot(HaveOccurred())
+				expectObjectsExists(ctx)
 			})
 		})
 	})
@@ -150,18 +150,7 @@ var _ = Describe("Gateway Bootstrap", Ordered, func() {
 
 			wg.Wait()
 
-			user := user
-			role := role
-			secret := secret
-
-			err := k8sClient.Get(ctx, client.ObjectKeyFromObject(&user), &user)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&role), &role)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&secret), &secret)
-			Expect(err).ToNot(HaveOccurred())
+			expectObjectsExists(ctx)
 		})
 	})
 })

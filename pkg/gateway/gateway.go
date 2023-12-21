@@ -2,7 +2,6 @@ package gateway
 
 import (
 	"context"
-	"crypto/rand"
 	"fmt"
 	"log/slog"
 	"os"
@@ -13,7 +12,6 @@ import (
 	"github.com/joshmeranda/marina/pkg/apis/terminal"
 	"github.com/joshmeranda/marina/pkg/apis/user"
 	authdriver "github.com/joshmeranda/marina/pkg/gateway/drivers/auth"
-	"github.com/joshmeranda/marina/pkg/gateway/drivers/secret"
 	"github.com/joshmeranda/marina/pkg/gateway/drivers/storage"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -49,7 +47,6 @@ type Gateway struct {
 
 	kubeClient      client.Client
 	logger          *slog.Logger
-	secretDriver    secret.Driver
 	namespace       string
 	accessListStore storage.KeyValueStore[string, marina.UserAccessList]
 	authDriver      authdriver.Driver
@@ -87,19 +84,6 @@ func NewGateway(opts ...Option) (*Gateway, error) {
 
 	if gateway.logger == nil {
 		gateway.logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
-	}
-
-	if gateway.secretDriver == nil {
-		signingKey := make([]byte, 10)
-		if _, err := rand.Read(signingKey); err != nil {
-			return nil, fmt.Errorf("error generating signing key: %w", err)
-		}
-
-		gateway.secretDriver = secret.NewMemoryDriver(map[string]secret.Secret{
-			TokenSigningSecretName: {
-				TokenSigningSecretField: signingKey,
-			},
-		})
 	}
 
 	if gateway.namespace == "" {

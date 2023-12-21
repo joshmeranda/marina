@@ -10,7 +10,6 @@ import (
 	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
 	marina "github.com/joshmeranda/marina/pkg"
 	marinagateway "github.com/joshmeranda/marina/pkg/gateway"
-	"github.com/joshmeranda/marina/pkg/gateway/drivers/secret"
 	"github.com/joshmeranda/marina/pkg/gateway/drivers/storage"
 	"github.com/urfave/cli/v2"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -77,7 +76,6 @@ func Start(ctx *cli.Context) error {
 	}
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
-	secretDriver := secret.NewKubeDriver(client, "marina-system")
 
 	etcdClient, err := getEtcdClient(ctx)
 	if err != nil {
@@ -88,7 +86,6 @@ func Start(ctx *cli.Context) error {
 	gateway, err := marinagateway.NewGateway(
 		marinagateway.WithLogger(logger),
 		marinagateway.WithKubeClient(client),
-		marinagateway.WithSecretDriver(secretDriver),
 		marinagateway.WithAccessListStore(storageDriver),
 		marinagateway.WithNamespace(ctx.String("namespace")),
 	)
