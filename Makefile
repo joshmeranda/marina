@@ -3,7 +3,7 @@ SOURCES=go.mod go.sum $(shell find pkg -type f -name '*.go')
 # # # # # # # # # # # # # # # # # # # #
 # Go commands                         #
 # # # # # # # # # # # # # # # # # # # #
-GO_BUILD=go build -ldflags "-X main.Version=${VERSION}"
+GO_BUILD=go build -ldflags "-X github.com/joshmeranda/marina/pkg/cmd/marina.Version=${VERSION} -X github.com/joshmeranda/marina/pkg/cmd/server.Version=${VERSION}"
 GO_FMT=go fmt
 GO_TEST=go test
 

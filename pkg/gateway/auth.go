@@ -35,7 +35,8 @@ type customDataClaims struct {
 
 func (g *Gateway) TokenAuthInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
-		if info.FullMethod == "/auth.AuthService/Login" {
+		switch info.FullMethod {
+		case "/auth.AuthService/Login", "/grpc.health.v1.Health/Check":
 			resp, err := handler(ctx, req)
 			return resp, err
 		}

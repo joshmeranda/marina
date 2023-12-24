@@ -138,6 +138,8 @@ func (g *Gateway) ensureUser(ctx context.Context) error {
 		return err
 	}
 
+	g.logger.Info("created admin user")
+
 	return nil
 }
 

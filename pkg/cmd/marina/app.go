@@ -21,23 +21,16 @@ var Version string
 
 var cm *configManager
 
-func init() {
-	var err error
-	cm, err = newDefualtConfigManager()
-	if err != nil {
-		panic(err)
-	}
-}
-
 func getClient(ctx *cli.Context) (*client.Client, error) {
-	bearerToken, err := cm.GetBearerToken()
+	var err error
+	cm, err = newConfigManager(ctx.String("config-dir"))
 	if err != nil {
-		return nil, fmt.Errorf("could not get bearer token: %w", err)
+		return nil, err
 	}
 
 	// todo: use real transport credentials
 	conn, err := grpc.Dial(ctx.String("address"),
-		grpc.WithUnaryInterceptor(client.TokenAuthInterceptor(bearerToken)),
+		grpc.WithUnaryInterceptor(client.TokenAuthInterceptor(cm.Config.BearerToken)),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
@@ -86,6 +79,7 @@ func healthCheck(ctx *cli.Context) error {
 		services = []string{
 			terminal.TerminalService_ServiceDesc.ServiceName,
 			user.UserService_ServiceDesc.ServiceName,
+			auth.AuthService_ServiceDesc.ServiceName,
 		}
 	} else {
 		services = ctx.Args().Slice()
@@ -113,13 +107,8 @@ func healthCheck(ctx *cli.Context) error {
 }
 
 func login(ctx *cli.Context) error {
-	ghAccessToken, err := cm.GetGhAccessToken()
-	if err != nil {
-		return fmt.Errorf("could not get github access token: %w", err)
-	}
-
 	req := &auth.LoginRequest{
-		Secret: ghAccessToken,
+		Secret: cm.Config.GhAccessToken,
 	}
 
 	client, err := getClient(ctx)
@@ -180,6 +169,12 @@ func App() cli.App {
 			},
 		},
 		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "config-dir",
+				Usage:   "the directory to store configuration in",
+				Aliases: []string{"c"},
+				EnvVars: []string{"MARINA_CONFIG_DIR"},
+			},
 			&cli.StringFlag{
 				Name:     "address",
 				Usage:    "the address of the gateway",

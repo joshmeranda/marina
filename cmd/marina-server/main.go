@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/joshmeranda/marina/pkg/cmd/marina"
+	"github.com/joshmeranda/marina/pkg/cmd/server"
 )
 
 func main() {
-	app := marina.App()
+	app := server.App()
 	if err := app.Run(os.Args); err != nil {
 		fmt.Printf("Error: %s\n", err)
 		os.Exit(1)

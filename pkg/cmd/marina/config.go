@@ -5,133 +5,104 @@ import (
 	"fmt"
 	"os"
 	"path"
+
+	"gopkg.in/yaml.v3"
 )
 
 const (
-	bearerTokenFileName       = "bearer-token"
-	githubAccessTokenFileName = "github-access-token"
+	configFileName = "config.yaml"
 )
 
-func encodeToFile(filePath string, v string) error {
-	tokenFile, err := os.Create(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to open file: %w", err)
-	}
-	defer tokenFile.Close()
+type config struct {
+	GhAccessToken string `yaml:"github-access-token,omitempty"`
+	BearerToken   string `yaml:"bearer-token,omitempty"`
 
-	encoder := base64.NewEncoder(base64.StdEncoding, tokenFile)
-	if _, err := encoder.Write([]byte(v)); err != nil {
-		return err
+	decoded bool
+}
+
+// Encode encodes appropriate fields in the config to base64. If the config is already encoded, this is a no-op.
+func (c *config) Encode(encoding *base64.Encoding) {
+	if c.decoded {
+		return
+	}
+
+	c.GhAccessToken = encoding.EncodeToString([]byte(c.GhAccessToken))
+	c.BearerToken = encoding.EncodeToString([]byte(c.BearerToken))
+}
+
+func (c *config) Decode(encoding *base64.Encoding) error {
+	if !c.decoded {
+		return nil
+	}
+
+	if decoded, err := encoding.DecodeString(c.GhAccessToken); err != nil {
+		return fmt.Errorf("failed to decode github access token: %w", err)
+	} else {
+		c.GhAccessToken = string(decoded)
+	}
+
+	if decoded, err := encoding.DecodeString(c.BearerToken); err != nil {
+		return fmt.Errorf("failed to decode github access token: %w", err)
+	} else {
+		c.BearerToken = string(decoded)
 	}
 
 	return nil
-}
-
-func decodeFromFile(filePath string) (string, error) {
-	tokenFile, err := os.Open(filePath)
-	if err != nil {
-		return "", fmt.Errorf("failed to open file: %w", err)
-	}
-	defer tokenFile.Close()
-
-	decoder := base64.NewDecoder(base64.StdEncoding, tokenFile)
-	data := make([]byte, 1024)
-	if _, err = decoder.Read(data); err != nil {
-		return "", err
-	}
-
-	return string(data), err
 }
 
 type configManager struct {
-	Root string
-
-	ghAccessToken *string
-	bearerToken   *string
+	Root     string
+	Encoding *base64.Encoding
+	Config   *config
 }
 
-func newDefualtConfigManager() (*configManager, error) {
-	userConfigDir, err := os.UserConfigDir()
+func newConfigManager(configRootDir string) (*configManager, error) {
+	if configRootDir == "" {
+		userConfigDir, err := os.UserConfigDir()
+		if err != nil {
+			return nil, fmt.Errorf("could not determine default config dir: %w", err)
+		}
+
+		configRootDir = path.Join(userConfigDir, "marina")
+	}
+
+	cm := &configManager{
+		Root:     configRootDir,
+		Encoding: base64.StdEncoding,
+		Config:   &config{},
+	}
+
+	configPath := path.Join(configRootDir, configFileName)
+	data, err := os.ReadFile(configPath)
+	if err != nil && !os.IsNotExist(err) {
+		return nil, fmt.Errorf("failed to open file: %w", err)
+	} else if err == nil {
+		if err := yaml.Unmarshal(data, cm.Config); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+
+		if err := cm.Config.Decode(cm.Encoding); err != nil {
+			return nil, fmt.Errorf("failed to decode config: %w", err)
+		}
+	}
+
+	return cm, nil
+}
+
+func (cm *configManager) Close() error {
+	cm.Config.Encode(cm.Encoding)
+
+	if err := os.MkdirAll(cm.Root, 0777); err != nil {
+		return fmt.Errorf("could not create config dir: %w", err)
+	}
+
+	configPath := path.Join(cm.Root, configFileName)
+
+	configFile, err := os.Create(configPath)
 	if err != nil {
-		return nil, fmt.Errorf("could not determine default config dir: %w", err)
+		return fmt.Errorf("failed to open file: %w", err)
 	}
-
-	configRootDir := path.Join(userConfigDir, "marina")
-
-	if os.MkdirAll(configRootDir, 0777); err != nil {
-		return nil, fmt.Errorf("could not create config dir: %w", err)
-	}
-
-	return &configManager{
-		Root: configRootDir,
-	}, nil
-}
-
-func (m *configManager) SetBearerToken(token string) error {
-	if m.bearerToken != nil && *m.bearerToken == token {
-		return nil
-	}
-
-	m.bearerToken = &token
-
-	tokenFilePath := path.Join(m.Root, bearerTokenFileName)
-
-	if err := encodeToFile(tokenFilePath, *m.bearerToken); err != nil {
-		return fmt.Errorf("failed to encode data to file: %w", err)
-	}
+	defer configFile.Close()
 
 	return nil
-}
-
-func (m *configManager) GetBearerToken() (string, error) {
-	if m.bearerToken != nil {
-		return *m.bearerToken, nil
-	}
-
-	tokenFilePath := path.Join(m.Root, bearerTokenFileName)
-
-	value, err := decodeFromFile(tokenFilePath)
-	if err != nil {
-		return "", fmt.Errorf("failed to decode token file: %w", err)
-	}
-
-	return string(value), err
-}
-
-func (m *configManager) SetGhAccessToken(token string) error {
-	if m.ghAccessToken != nil && *m.ghAccessToken == token {
-		return nil
-	}
-
-	m.ghAccessToken = &token
-
-	tokenFilePath := path.Join(m.Root, githubAccessTokenFileName)
-
-	if err := encodeToFile(tokenFilePath, *m.ghAccessToken); err != nil {
-		return fmt.Errorf("failed to encode data to file: %w", err)
-	}
-
-	return nil
-}
-
-func (m *configManager) GetGhAccessToken() (string, error) {
-	if m.ghAccessToken != nil {
-		return *m.ghAccessToken, nil
-	}
-
-	tokenFilePath := path.Join(m.Root, githubAccessTokenFileName)
-
-	tokenFile, err := os.Open(tokenFilePath)
-	if err != nil {
-		return "", fmt.Errorf("failed to open file: %w", err)
-	}
-	defer tokenFile.Close()
-
-	decoder := base64.NewDecoder(base64.StdEncoding, tokenFile)
-	data := make([]byte, 1024)
-	if _, err = decoder.Read(data); err != nil {
-		return "", fmt.Errorf("failed to decode token file: %w", err)
-	}
-
-	return string(data), err
 }

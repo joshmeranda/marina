@@ -8,6 +8,7 @@ import (
 	"github.com/cli/oauth/api"
 	"github.com/joshmeranda/marina/pkg/apis/auth"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 var _ auth.AuthServiceClient = &Client{}
@@ -15,6 +16,17 @@ var _ auth.AuthServiceClient = &Client{}
 const (
 	ClientId string = "614fad3dd8cd7deb6892"
 )
+
+func TokenAuthInterceptor(token string) grpc.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+		if token != "" {
+			ctx = metadata.AppendToOutgoingContext(ctx, "token", token)
+		}
+
+		err := invoker(ctx, method, req, reply, cc, opts...)
+		return err
+	}
+}
 
 func (c *Client) getAccessToken(ctx context.Context, req *auth.LoginRequest) (*api.AccessToken, error) {
 	flow := oauth.Flow{
