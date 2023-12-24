@@ -4,8 +4,8 @@ import "github.com/urfave/cli/v2"
 
 var (
 	authCommand = &cli.Command{
-		Name:        "auth",
-		Description: "manage authentication",
+		Name:  "auth",
+		Usage: "manage authentication",
 		Subcommands: []*cli.Command{
 			{
 				Name:  "login",

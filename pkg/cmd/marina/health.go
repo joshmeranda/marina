@@ -46,8 +46,8 @@ func healthCheck(ctx *cli.Context) error {
 
 var (
 	healthCheckCommand = &cli.Command{
-		Name:        "check",
-		Description: "check the health of the gateway",
-		Action:      healthCheck,
+		Name:   "check",
+		Usage:  "check the health of the gateway",
+		Action: healthCheck,
 	}
 )

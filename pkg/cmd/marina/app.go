@@ -33,7 +33,7 @@ func App() cli.App {
 		Version:     Version,
 		Description: "interact with the marina gateway",
 		Commands: []*cli.Command{
-			terminalCreateCommand,
+			terminalCommand,
 			healthCheckCommand,
 			authCommand,
 		},

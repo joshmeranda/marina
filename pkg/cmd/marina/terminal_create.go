@@ -42,7 +42,7 @@ func create(ctx *cli.Context) error {
 
 var (
 	terminalCreateCommand = &cli.Command{
-		Name:  "terminal-create",
+		Name:  "create",
 		Usage: "create a terminal",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
