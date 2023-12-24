@@ -12,7 +12,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("client", func() {
+var _ = Describe("Marina Check", func() {
 	var ctx context.Context
 	var cancel context.CancelCauseFunc
 	var namespace string
@@ -61,6 +61,6 @@ var _ = Describe("client", func() {
 		Eventually(func() error {
 			err := clientApp.RunContext(ctx, []string{"marina", "--address", fmt.Sprintf("127.0.0.1:%d", port), "check"})
 			return err
-		}, "10s").Should(Succeed())
+		}, "5s").Should(Succeed())
 	})
 })

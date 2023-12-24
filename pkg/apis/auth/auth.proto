@@ -15,7 +15,7 @@ enum SecretType {
 }
 
 message LoginRequest {
-	string Secret = 1;
+	bytes Secret = 1;
 	SecretType secretType = 2;
 	string user = 3;
 }

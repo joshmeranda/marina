@@ -48,7 +48,7 @@ func (g *Gateway) CreateUser(ctx context.Context, req *user.UserCreateRequest) (
 		},
 		Spec: marinav1.UserSpec{
 			Name:     req.User.Name, // todo: remove redundant field
-			Password: string(hash),
+			Password: hash,
 			Roles:    req.User.Roles,
 		},
 	}
@@ -88,7 +88,7 @@ func (g *Gateway) UpdateUser(ctx context.Context, req *user.UserUpdateRequest) (
 		user.Spec.Name = req.User.Name
 	}
 
-	if req.User.Password != "" {
+	if req.User.Password == nil {
 		user.Spec.Password = req.User.Password
 	}
 

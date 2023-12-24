@@ -44,14 +44,14 @@ func (c *Client) getAccessToken(ctx context.Context, req *auth.LoginRequest) (*a
 }
 
 func (c *Client) githubLogin(ctx context.Context, req *auth.LoginRequest, opts ...grpc.CallOption) (*auth.LoginResponse, error) {
-	if req.Secret == "" {
+	if len(req.Secret) == 0 {
 		c.logger.Info("no access token found, must authenticate with oauth provider")
 		token, err := c.getAccessToken(ctx, req)
 		if err != nil {
 			return nil, fmt.Errorf("error getting access token: %w", err)
 		}
 
-		req.Secret = token.Token
+		req.Secret = []byte(token.Token)
 	}
 
 	resp, err := c.authClient.Login(ctx, req)

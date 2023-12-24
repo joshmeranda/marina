@@ -11,10 +11,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const (
-	passwordFieldName = "value"
-)
-
 type Local struct {
 	kubeClient client.Client
 	namespace  string
@@ -37,7 +33,7 @@ func (d *Local) Authenticate(ctx context.Context, req *auth.LoginRequest) error 
 		return fmt.Errorf("unable to get user: %w", err)
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Spec.Password), []byte(req.Secret)); err != nil {
+	if err := bcrypt.CompareHashAndPassword(user.Spec.Password, []byte(req.Secret)); err != nil {
 		return err
 	}
 

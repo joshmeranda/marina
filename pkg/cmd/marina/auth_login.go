@@ -18,7 +18,7 @@ func fillLoginRequest(ctx *cli.Context, req *auth.LoginRequest) error {
 	narg := args.Len()
 
 	var user string
-	secret := os.Getenv(loginSecretEnvName)
+	secret := []byte(os.Getenv(loginSecretEnvName))
 
 	switch narg {
 	case 0:
@@ -27,12 +27,12 @@ func fillLoginRequest(ctx *cli.Context, req *auth.LoginRequest) error {
 		user = args.First()
 	case 2:
 		user = args.First()
-		secret = args.Get(1)
+		secret = []byte(args.Get(1))
 	default:
 		return fmt.Errorf("expected at most 2 args, got %d", narg)
 	}
 
-	if secret == "" {
+	if len(secret) == 0 {
 		return fmt.Errorf("secret is required but not provided")
 	}
 
@@ -75,7 +75,7 @@ func passwordLogin(ctx *cli.Context) error {
 
 func githubLogin(ctx *cli.Context) error {
 	err := login(ctx, &auth.LoginRequest{
-		Secret:     cm.Config.BearerToken,
+		Secret:     []byte(cm.Config.BearerToken),
 		SecretType: auth.SecretType_Github,
 	})
 	if err != nil {

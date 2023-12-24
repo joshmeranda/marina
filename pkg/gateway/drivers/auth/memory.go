@@ -3,18 +3,19 @@ package auth
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/joshmeranda/marina/pkg/apis/auth"
 	"github.com/joshmeranda/marina/pkg/gateway/drivers/storage"
 )
 
 type Memory struct {
-	store storage.KeyValueStore[string, string]
+	store storage.KeyValueStore[string, []byte]
 }
 
 func NewMemory() Driver {
 	return &Memory{
-		store: storage.NewMemoryStore[string, string](),
+		store: storage.NewMemoryStore[string, []byte](),
 	}
 }
 
@@ -24,7 +25,7 @@ func (d *Memory) Authenticate(ctx context.Context, req *auth.LoginRequest) error
 		return err
 	}
 
-	if password != req.Secret {
+	if slices.Equal(password, req.Secret) {
 		return fmt.Errorf("password is not valid for user %s", req.User)
 	}
 

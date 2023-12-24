@@ -7,7 +7,6 @@ import (
 	"math/big"
 
 	"github.com/joshmeranda/marina/pkg/apis/user"
-	"golang.org/x/crypto/bcrypt"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -22,17 +21,17 @@ const (
 	bootstrapSecretKey  = "password"
 )
 
-func generateRandomPassword(length int) (string, error) {
+func generateRandomPassword(length int) ([]byte, error) {
 	bigLength := big.NewInt(int64(len(charSet)))
 	passwordRaw := make([]byte, length)
 	for i := range passwordRaw {
 		r, err := rand.Int(rand.Reader, bigLength)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		passwordRaw[i] = charSet[r.Int64()]
 	}
-	return string(passwordRaw), nil
+	return passwordRaw, nil
 }
 
 func (g *Gateway) ensureRole(ctx context.Context) error {
@@ -100,24 +99,22 @@ func (g *Gateway) ensureUser(ctx context.Context) error {
 		Data: map[string][]byte{},
 	}
 
-	var bootstrapHash []byte
+	var bootstrapPassword []byte
 
 	if err := g.kubeClient.Get(ctx, client.ObjectKeyFromObject(&secret), &secret); errors.IsNotFound(err) {
+		g.logger.Debug("bootstrap secret does not exist, creating")
+
 		// todo: allow users to specify bootstrap password
-		bootstrapPassword, err := generateRandomPassword(20)
+		bootstrapPassword, err = generateRandomPassword(20)
 		if err != nil {
 			return fmt.Errorf("failed to generate bootstrap password: %w", err)
 		}
 
-		bootstrapHash, err = bcrypt.GenerateFromPassword([]byte(bootstrapPassword), bcrypt.DefaultCost)
-		if err != nil {
-			return fmt.Errorf("failed to generate bootstrap hash: %w", err)
-		}
-
-		secret.Data[bootstrapSecretKey] = bootstrapHash
+		secret.Data[bootstrapSecretKey] = bootstrapPassword
 
 		if err := g.kubeClient.Create(ctx, &secret); errors.IsAlreadyExists(err) {
 			g.logger.Debug("bootstrap secret already exists")
+			return nil
 		} else if err != nil {
 			return fmt.Errorf("failed to create bootstrap secret: %w", err)
 		}
@@ -126,7 +123,7 @@ func (g *Gateway) ensureUser(ctx context.Context) error {
 	req := &user.UserCreateRequest{
 		User: &user.User{
 			Name:     "admin",
-			Password: string(bootstrapHash),
+			Password: bootstrapPassword,
 			Roles:    []string{"admin"},
 		},
 	}

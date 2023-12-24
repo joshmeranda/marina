@@ -36,13 +36,11 @@ var (
 	clientApp cli.App
 	serverApp cli.App
 
-	defaultServerArgs = []string{}
-
 	testDir        string
 	kubeconfigPath string
 )
 
-func TestGateway(t *testing.T) {
+func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "E2E Suite")
 }
@@ -142,8 +140,6 @@ func runServerWithArgs(ctx context.Context, namespace string, port int, addition
 
 	args := []string{"marina-server", "--etcd", testEnv.ControlPlane.Etcd.URL.String(), "--namespace", namespace, "--port", fmt.Sprintf("%d", port), "--kubeconfig", kubeconfigPath}
 	args = append(args, additionalArgs...)
-
-	fmt.Printf("=== [runServerWithArgs] args: %v ===\n", args)
 
 	By("by starting marina server")
 	err := serverApp.RunContext(ctx, args)

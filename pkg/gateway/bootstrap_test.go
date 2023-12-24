@@ -10,6 +10,7 @@ import (
 	"github.com/joshmeranda/marina/pkg/gateway"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"golang.org/x/crypto/bcrypt"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,6 +37,31 @@ var _ = Describe("Gateway Bootstrap", Ordered, func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&secret), &secret)
+		Expect(err).ToNot(HaveOccurred())
+	}
+
+	expectHashMatches := func(ctx context.Context) {
+		GinkgoHelper()
+
+		secret := corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "marina-bootstrap-password",
+				Namespace: namespace,
+			},
+		}
+		err := k8sClient.Get(ctx, client.ObjectKeyFromObject(&secret), &secret)
+		Expect(err).ToNot(HaveOccurred())
+
+		user := marinav1.User{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "admin",
+				Namespace: namespace,
+			},
+		}
+		err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&user), &user)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = bcrypt.CompareHashAndPassword(user.Spec.Password, secret.Data["password"])
 		Expect(err).ToNot(HaveOccurred())
 	}
 
@@ -118,6 +144,7 @@ var _ = Describe("Gateway Bootstrap", Ordered, func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				expectObjectsExists(ctx)
+				expectHashMatches(ctx)
 			})
 		})
 
@@ -127,10 +154,12 @@ var _ = Describe("Gateway Bootstrap", Ordered, func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				expectObjectsExists(ctx)
+				expectHashMatches(ctx)
 			})
 		})
 	})
 
+	// When("bootstrapping in parallel", FlakeAttempts(10), func() {
 	When("bootstrapping in parallel", func() {
 		It("successfully creates admin role and user", func(ctx context.Context) {
 			n := 10
@@ -151,6 +180,7 @@ var _ = Describe("Gateway Bootstrap", Ordered, func() {
 			wg.Wait()
 
 			expectObjectsExists(ctx)
+			expectHashMatches(ctx)
 		})
 	})
 })

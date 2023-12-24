@@ -14,7 +14,7 @@ func NewGithub() Driver {
 }
 
 func (d Github) Authenticate(ctx context.Context, req *auth.LoginRequest) error {
-	client := github.NewClient(nil).WithAuthToken(req.Secret)
+	client := github.NewClient(nil).WithAuthToken(string(req.Secret))
 
 	_, _, err := client.Users.Get(ctx, "")
 	if err != nil {

@@ -44,7 +44,7 @@ var _ = Describe("Gateway Auth", Ordered, func() {
 		_, err = g.CreateUser(context.Background(), &user.UserCreateRequest{
 			User: &user.User{
 				Name:     "test-user",
-				Password: "password",
+				Password: []byte("password"),
 				Roles:    []string{},
 			},
 		})
@@ -76,7 +76,7 @@ var _ = Describe("Gateway Auth", Ordered, func() {
 	When("using correct password", func() {
 		It("can login", func(ctx context.Context) {
 			resp, err := g.Login(ctx, &auth.LoginRequest{
-				Secret:     "password",
+				Secret:     []byte("password"),
 				SecretType: auth.SecretType_Password,
 				User:       "test-user",
 			})
@@ -88,7 +88,7 @@ var _ = Describe("Gateway Auth", Ordered, func() {
 	When("using wrong password", func() {
 		It("cannot login", func(ctx context.Context) {
 			resp, err := g.Login(ctx, &auth.LoginRequest{
-				Secret:     "wrong-password",
+				Secret:     []byte("wrong-password"),
 				SecretType: auth.SecretType_Password,
 				User:       "test-user",
 			})
