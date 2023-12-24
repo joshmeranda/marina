@@ -40,6 +40,16 @@ var _ = Describe("Gateway Terminal Service", Ordered, func() {
 		})
 	})
 
+	AfterAll(func() {
+		err := k8sClient.Delete(context.Background(), &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      namespace,
+				Namespace: namespace,
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+	})
+
 	It("can create a terminal", func(ctx context.Context) {
 		req := &terminal.TerminalCreateRequest{
 			Name: &core.NamespacedName{

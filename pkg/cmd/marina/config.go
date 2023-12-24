@@ -1,4 +1,4 @@
-package main
+package marina
 
 import (
 	"encoding/base64"
@@ -43,14 +43,14 @@ func decodeFromFile(filePath string) (string, error) {
 	return string(data), err
 }
 
-type ConfigManager struct {
+type configManager struct {
 	Root string
 
 	ghAccessToken *string
 	bearerToken   *string
 }
 
-func NewDefualtConfigManager() (*ConfigManager, error) {
+func newDefualtConfigManager() (*configManager, error) {
 	userConfigDir, err := os.UserConfigDir()
 	if err != nil {
 		return nil, fmt.Errorf("could not determine default config dir: %w", err)
@@ -62,12 +62,12 @@ func NewDefualtConfigManager() (*ConfigManager, error) {
 		return nil, fmt.Errorf("could not create config dir: %w", err)
 	}
 
-	return &ConfigManager{
+	return &configManager{
 		Root: configRootDir,
 	}, nil
 }
 
-func (m *ConfigManager) SetBearerToken(token string) error {
+func (m *configManager) SetBearerToken(token string) error {
 	if m.bearerToken != nil && *m.bearerToken == token {
 		return nil
 	}
@@ -83,7 +83,7 @@ func (m *ConfigManager) SetBearerToken(token string) error {
 	return nil
 }
 
-func (m *ConfigManager) GetBearerToken() (string, error) {
+func (m *configManager) GetBearerToken() (string, error) {
 	if m.bearerToken != nil {
 		return *m.bearerToken, nil
 	}
@@ -98,7 +98,7 @@ func (m *ConfigManager) GetBearerToken() (string, error) {
 	return string(value), err
 }
 
-func (m *ConfigManager) SetGhAccessToken(token string) error {
+func (m *configManager) SetGhAccessToken(token string) error {
 	if m.ghAccessToken != nil && *m.ghAccessToken == token {
 		return nil
 	}
@@ -114,7 +114,7 @@ func (m *ConfigManager) SetGhAccessToken(token string) error {
 	return nil
 }
 
-func (m *ConfigManager) GetGhAccessToken() (string, error) {
+func (m *configManager) GetGhAccessToken() (string, error) {
 	if m.ghAccessToken != nil {
 		return *m.ghAccessToken, nil
 	}
