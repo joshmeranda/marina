@@ -89,6 +89,34 @@ var _ = Describe("Gateway User Service", Ordered, func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
+		It("can list users", func(ctx context.Context) {
+			req := &user.UserListRequest{
+				Query: &user.UserQuery{},
+			}
+
+			resp, err := g.ListUser(ctx, req)
+			Expect(err).ToNot(HaveOccurred())
+
+			cleanResp := user.UserListResponse{
+				Users: make([]*user.User, len(resp.Users)),
+			}
+			for i, u := range resp.Users {
+				cleanResp.Users[i] = &user.User{
+					Name:     u.Name,
+					Password: u.Password,
+					Roles:    u.Roles,
+				}
+			}
+
+			expected := []*user.User{
+				{
+					Name:  "bbaggins",
+					Roles: []string{"SomeRole"},
+				},
+			}
+			Expect(resp.Users).To(ConsistOf(expected))
+		})
+
 		It("can edit a user", func(ctx context.Context) {
 			req := &user.UserUpdateRequest{
 				User: &user.User{

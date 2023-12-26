@@ -36,3 +36,12 @@ func (c *Client) UpdateUser(ctx context.Context, in *user.UserUpdateRequest, opt
 
 	return &emptypb.Empty{}, nil
 }
+
+func (c *Client) ListUser(ctx context.Context, in *user.UserListRequest, opts ...grpc.CallOption) (*user.UserListResponse, error) {
+	resp, err := c.userClient.ListUser(ctx, in, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}

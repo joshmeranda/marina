@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"context"
+	"fmt"
 
 	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
 	"github.com/joshmeranda/marina/pkg/apis/user"
@@ -101,4 +102,31 @@ func (g *Gateway) UpdateUser(ctx context.Context, req *user.UserUpdateRequest) (
 	}
 
 	return &emptypb.Empty{}, nil
+}
+
+func (g *Gateway) ListUser(ctx context.Context, req *user.UserListRequest) (*user.UserListResponse, error) {
+	var list marinav1.UserList
+	if err := g.kubeClient.List(ctx, &list); err != nil {
+		return nil, err
+	}
+
+	response := &user.UserListResponse{
+		Users: make([]*user.User, 0, len(list.Items)),
+	}
+
+	for _, foundUser := range list.Items {
+		matches, err := req.Query.Matches(&foundUser)
+		if err != nil {
+			return nil, fmt.Errorf("failed to apply qurery to user: %w", err)
+		}
+
+		if matches {
+			response.Users = append(response.Users, &user.User{
+				Name:  foundUser.Name,
+				Roles: foundUser.Spec.Roles,
+			})
+		}
+	}
+
+	return response, nil
 }
