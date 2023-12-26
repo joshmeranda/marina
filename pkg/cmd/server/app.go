@@ -1,20 +1,16 @@
 package server
 
 import (
-	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"net"
-	"os"
 
 	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
-	marina "github.com/joshmeranda/marina/pkg"
 	authapis "github.com/joshmeranda/marina/pkg/apis/auth"
 	marinagateway "github.com/joshmeranda/marina/pkg/gateway"
 	"github.com/joshmeranda/marina/pkg/gateway/drivers/auth"
-	"github.com/joshmeranda/marina/pkg/gateway/drivers/storage"
 	"github.com/urfave/cli/v2"
-	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -53,26 +49,6 @@ func getClusterClient(ctx *cli.Context) (client.Client, error) {
 	return client, nil
 }
 
-func getAccessListDriver(ctx *cli.Context) (storage.KeyValueStore[string, marina.UserAccessList], error) {
-	var storageDriver storage.KeyValueStore[string, marina.UserAccessList]
-
-	if etcdEndpoints := ctx.StringSlice("etcd-endpoints"); etcdEndpoints != nil {
-		config := clientv3.Config{
-			Endpoints: etcdEndpoints,
-		}
-		client, err := clientv3.New(config)
-		if err != nil {
-			return nil, err
-		}
-
-		storageDriver = storage.NewEtcdStore[marina.UserAccessList](client, json.Marshal, json.Unmarshal)
-	} else {
-		storageDriver = storage.NewMemoryStore[string, marina.UserAccessList]()
-	}
-
-	return storageDriver, nil
-}
-
 func start(ctx *cli.Context) error {
 	port := ctx.Int("port")
 	addr := fmt.Sprintf(":%d", port)
@@ -89,12 +65,8 @@ func start(ctx *cli.Context) error {
 
 	namespace := ctx.String("namespace")
 
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
-
-	storageDriver, err := getAccessListDriver(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to create access list storage driver: %w", err)
-	}
+	// logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
+	logger := slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{}))
 
 	authDriver := auth.MultiAuth{
 		Drivers: map[authapis.SecretType]auth.Driver{
@@ -106,7 +78,6 @@ func start(ctx *cli.Context) error {
 	gateway, err := marinagateway.NewGateway(
 		marinagateway.WithLogger(logger),
 		marinagateway.WithKubeClient(client),
-		marinagateway.WithAccessListStore(storageDriver),
 		marinagateway.WithNamespace(namespace),
 		marinagateway.WithAuthDriver(&authDriver),
 	)

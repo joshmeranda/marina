@@ -22,7 +22,13 @@ type config struct {
 
 // Encode encodes appropriate fields in the config to base64. If the config is already encoded, this is a no-op.
 func (c *config) Encode(encoding *base64.Encoding) {
-	if c.decoded {
+	// todo: can result in partially encoded config
+
+	defer func() {
+		c.decoded = false
+	}()
+
+	if !c.decoded {
 		return
 	}
 
@@ -31,7 +37,13 @@ func (c *config) Encode(encoding *base64.Encoding) {
 }
 
 func (c *config) Decode(encoding *base64.Encoding) error {
-	if !c.decoded {
+	// todo: can result in partially decoded config
+
+	defer func() {
+		c.decoded = true
+	}()
+
+	if c.decoded {
 		return nil
 	}
 
@@ -86,6 +98,11 @@ func newConfigManager(configRootDir string) (*configManager, error) {
 		}
 	}
 
+	err = cm.Config.Decode(cm.Encoding)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode config: %w", err)
+	}
+
 	return cm, nil
 }
 
@@ -103,6 +120,15 @@ func (cm *configManager) Close() error {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
 	defer configFile.Close()
+
+	data, err := yaml.Marshal(cm.Config)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	if _, err := configFile.Write(data); err != nil {
+		return fmt.Errorf("failed to write config: %w", err)
+	}
 
 	return nil
 }

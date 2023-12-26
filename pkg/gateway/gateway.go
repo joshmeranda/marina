@@ -7,12 +7,10 @@ import (
 	"os"
 
 	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
-	marina "github.com/joshmeranda/marina/pkg"
 	"github.com/joshmeranda/marina/pkg/apis/auth"
 	"github.com/joshmeranda/marina/pkg/apis/terminal"
 	"github.com/joshmeranda/marina/pkg/apis/user"
 	authdriver "github.com/joshmeranda/marina/pkg/gateway/drivers/auth"
-	"github.com/joshmeranda/marina/pkg/gateway/drivers/storage"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
@@ -45,11 +43,10 @@ type Gateway struct {
 
 	health healthgrpc.HealthServer
 
-	kubeClient      client.Client
-	logger          *slog.Logger
-	namespace       string
-	accessListStore storage.KeyValueStore[string, marina.UserAccessList]
-	authDriver      authdriver.Driver
+	kubeClient client.Client
+	logger     *slog.Logger
+	namespace  string
+	authDriver authdriver.Driver
 }
 
 func NewGateway(opts ...Option) (*Gateway, error) {
@@ -88,10 +85,6 @@ func NewGateway(opts ...Option) (*Gateway, error) {
 
 	if gateway.namespace == "" {
 		gateway.namespace = DefaultNamespace
-	}
-
-	if gateway.accessListStore == nil {
-		gateway.accessListStore = storage.NewMemoryStore[string, marina.UserAccessList]()
 	}
 
 	if gateway.authDriver == nil {

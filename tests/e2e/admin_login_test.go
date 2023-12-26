@@ -3,6 +3,7 @@ package e2e_test
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"path"
@@ -23,7 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Admin Login", func() {
+var _ = Describe("Admin Login", Ordered, func() {
 	var ctx context.Context
 	var cancel context.CancelCauseFunc
 	var namespace string
@@ -31,7 +32,7 @@ var _ = Describe("Admin Login", func() {
 	var err error
 	var configDir string
 
-	BeforeEach(func() {
+	BeforeAll(func() {
 		configDir = path.Join(testDir, "admin-login-config-"+generateRandomSuffix())
 		ctx, cancel = context.WithCancelCause(context.Background())
 
@@ -61,7 +62,7 @@ var _ = Describe("Admin Login", func() {
 		conn, err := grpc.Dial(fmt.Sprintf("localhost:%d", port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 		Expect(err).ToNot(HaveOccurred())
 
-		logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
+		logger := slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{}))
 		client := marinaclient.NewClient(conn, logger)
 
 		services := []string{
@@ -91,7 +92,11 @@ var _ = Describe("Admin Login", func() {
 		}, "5s").Should(Equal(len(services)))
 	})
 
-	AfterEach(func() {
+	BeforeEach(func() {
+		fmt.Println()
+	})
+
+	AfterAll(func() {
 		cancel(fmt.Errorf("AfterAll test complete"))
 
 		err := k8sClient.Delete(context.Background(), &corev1.Namespace{
@@ -106,7 +111,13 @@ var _ = Describe("Admin Login", func() {
 		Expect(err).ToNot(HaveOccurred())
 	})
 
-	It("receives client health status", func() {
+	It("fails to access endpoints requiring auth", func() {
+		args := []string{"marina", "--address", fmt.Sprintf("127.0.0.1:%d", port), "--config-dir", configDir, "user", "list"}
+		err := clientApp.RunContext(ctx, args)
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("receives credentials", func() {
 		passwordSecret := corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "marina-bootstrap-password",
@@ -123,5 +134,11 @@ var _ = Describe("Admin Login", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		Expect(path.Join(configDir, "config.yaml")).To(BeAnExistingFile())
+	})
+
+	It("is able to access endpoints requiring auth", func() {
+		args := []string{"marina", "--address", fmt.Sprintf("127.0.0.1:%d", port), "--config-dir", configDir, "user", "list"}
+		err := clientApp.RunContext(ctx, args)
+		Expect(err).ToNot(HaveOccurred())
 	})
 })

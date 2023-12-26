@@ -36,6 +36,7 @@ func App() cli.App {
 			terminalCommand,
 			healthCheckCommand,
 			authCommand,
+			userCommand,
 		},
 		Before: setup,
 		After:  teardown,

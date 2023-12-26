@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/go-github/v57/github"
-	marina "github.com/joshmeranda/marina/pkg"
 	"github.com/joshmeranda/marina/pkg/apis/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -27,6 +25,7 @@ const (
 	UserAccessFieldKeyName = "user-access-list"
 )
 
+// todo: add serviceaccount token?
 type customDataClaims struct {
 	jwt.RegisteredClaims
 
@@ -52,7 +51,19 @@ func (g *Gateway) TokenAuthInterceptor() grpc.UnaryServerInterceptor {
 		}
 
 		token, err := jwt.ParseWithClaims(tokens[0], &customDataClaims{}, func(token *jwt.Token) (interface{}, error) {
-			return []byte("secret"), nil
+			secret := corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      TokenSigningSecretName,
+					Namespace: g.namespace,
+				},
+			}
+			if err := g.kubeClient.Get(ctx, client.ObjectKeyFromObject(&secret), &secret); err != nil {
+				return "", fmt.Errorf("could not get signing secret: %w", err)
+			}
+
+			signingKey := secret.Data[TokenSigningSecretField]
+
+			return signingKey, nil
 		})
 		if err != nil {
 			return resp, fmt.Errorf("could not parse token: %w", err)
@@ -63,43 +74,14 @@ func (g *Gateway) TokenAuthInterceptor() grpc.UnaryServerInterceptor {
 			return nil, fmt.Errorf("unsupported token claim type: %t", token.Claims)
 		}
 
-		client := github.NewClient(nil)
+		// todo: we aren't actually checking for authentication here
+		// todo: if the claim is expired, we should return an error
 
-		if isUserAllowed, err := g.isUserAllowed(ctx, client, customClaim.User); err != nil {
-			return nil, fmt.Errorf("error checking for user access: %w", err)
-		} else if !isUserAllowed {
-			return nil, fmt.Errorf("user '%s' is not allowed", customClaim.User)
-		}
+		_ = customClaim
 
 		resp, err = handler(ctx, req)
 
 		return resp, err
-	}
-}
-
-func (g *Gateway) isUserAllowed(ctx context.Context, ghClient *github.Client, username string) (bool, error) {
-	orgs, _, err := ghClient.Organizations.List(context.Background(), "", nil)
-	if err != nil {
-		return false, fmt.Errorf("could not retrieve user organizations: %w", err)
-	}
-
-	orgNames := make([]string, len(orgs))
-	for i, org := range orgs {
-		orgNames[i] = org.GetLogin()
-	}
-
-	list, err := g.accessListStore.Get(ctx, UserAccessFieldKeyName)
-	if err != nil {
-		return false, fmt.Errorf("could not retrieve user access list: %w", err)
-	}
-
-	switch accessType := list.GetAccessFor(username, orgNames); accessType {
-	case marina.AccessTypeAllow:
-		return true, nil
-	case marina.AccessTypeDeny | marina.AccessTypeUnknown:
-		return false, nil
-	default:
-		panic(fmt.Sprintf("bug: encountered unsupported accesss type %d", accessType))
 	}
 }
 

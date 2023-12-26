@@ -3,9 +3,7 @@ package gateway
 import (
 	"log/slog"
 
-	marina "github.com/joshmeranda/marina/pkg"
 	"github.com/joshmeranda/marina/pkg/gateway/drivers/auth"
-	"github.com/joshmeranda/marina/pkg/gateway/drivers/storage"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -20,12 +18,6 @@ func WithKubeClient(client client.Client) Option {
 func WithLogger(logger *slog.Logger) Option {
 	return func(g *Gateway) {
 		g.logger = logger
-	}
-}
-
-func WithAccessListStore(store storage.KeyValueStore[string, marina.UserAccessList]) Option {
-	return func(g *Gateway) {
-		g.accessListStore = store
 	}
 }
 
