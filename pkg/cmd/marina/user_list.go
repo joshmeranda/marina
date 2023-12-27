@@ -23,7 +23,7 @@ func userList(ctx *cli.Context) error {
 	}
 
 	for _, user := range resp.Users {
-		fmt.Printf("%-10s %v", user.Name, user.Roles)
+		fmt.Printf("%-10s %v\n", user.Name, user.Roles)
 	}
 
 	return nil

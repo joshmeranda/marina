@@ -5,6 +5,7 @@ import (
 	"io"
 	"log/slog"
 	"net"
+	"os"
 
 	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
 	authapis "github.com/joshmeranda/marina/pkg/apis/auth"
@@ -49,6 +50,27 @@ func getClusterClient(ctx *cli.Context) (client.Client, error) {
 	return client, nil
 }
 
+func getLogger(ctx *cli.Context) *slog.Logger {
+	var out io.Writer = os.Stdout
+	opts := &slog.HandlerOptions{}
+
+	if ctx.Bool("quiet") {
+		opts.Level = slog.LevelWarn
+	}
+
+	if ctx.Bool("silent") {
+		out = io.Discard
+	}
+
+	if ctx.Bool("verbose") {
+		opts.Level = slog.LevelDebug
+	}
+
+	logger := slog.New(slog.NewTextHandler(out, opts))
+
+	return logger
+}
+
 func start(ctx *cli.Context) error {
 	port := ctx.Int("port")
 	addr := fmt.Sprintf(":%d", port)
@@ -65,8 +87,7 @@ func start(ctx *cli.Context) error {
 
 	namespace := ctx.String("namespace")
 
-	// logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
-	logger := slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{}))
+	logger := getLogger(ctx)
 
 	authDriver := auth.MultiAuth{
 		Drivers: map[authapis.SecretType]auth.Driver{
@@ -132,6 +153,22 @@ func App() cli.App {
 				Name:    "etcd",
 				Usage:   "the endpoints for the etcd cluster to use for storing access lists",
 				Aliases: []string{"e"},
+			},
+
+			&cli.BoolFlag{
+				Name:    "quiet",
+				Usage:   "suppress all output except for warnings and errors",
+				Aliases: []string{"q"},
+			},
+			&cli.BoolFlag{
+				Name:    "silent",
+				Usage:   "suppress all output",
+				Aliases: []string{"s"},
+			},
+			&cli.BoolFlag{
+				Name:    "verbose",
+				Usage:   "run verbosely",
+				Aliases: []string{"v"},
 			},
 		},
 		Action: start,

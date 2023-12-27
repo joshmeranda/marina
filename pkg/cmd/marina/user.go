@@ -8,6 +8,9 @@ var (
 		Usage: "interact with the user api",
 		Subcommands: []*cli.Command{
 			userListCommand,
+			userCreateCommand,
+			userDeleteCommand,
+			userUpdateCommand,
 		},
 	}
 )
