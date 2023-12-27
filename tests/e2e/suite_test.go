@@ -3,6 +3,7 @@ package e2e_test
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"math"
 	"math/rand"
 	"os"
@@ -10,11 +11,14 @@ import (
 	"testing"
 
 	terminalv1 "github.com/joshmeranda/marina-operator/api/v1"
+	marinaclient "github.com/joshmeranda/marina/pkg/client"
 	"github.com/joshmeranda/marina/pkg/cmd/marina"
 	"github.com/joshmeranda/marina/pkg/cmd/server"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/urfave/cli/v2"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -138,10 +142,34 @@ func runServerWithArgs(ctx context.Context, namespace string, port int, addition
 	GinkgoHelper()
 	defer GinkgoRecover()
 
-	args := []string{"marina-server", "--etcd", testEnv.ControlPlane.Etcd.URL.String(), "--namespace", namespace, "--port", fmt.Sprintf("%d", port), "--kubeconfig", kubeconfigPath}
+	args := []string{"marina-server",
+		"--etcd", testEnv.ControlPlane.Etcd.URL.String(),
+		"--namespace", namespace,
+		"--port", fmt.Sprintf("%d", port),
+		"--kubeconfig", kubeconfigPath,
+		// "--silent",
+	}
 	args = append(args, additionalArgs...)
 
 	By("by starting marina server")
 	err := serverApp.RunContext(ctx, args)
 	Expect(err).ToNot(HaveOccurred())
+}
+
+func clientCall(ctx context.Context, address string, bearerToken string, f func(ctx context.Context, client *marinaclient.Client) error) error {
+	conn, err := grpc.Dial(address,
+		grpc.WithUnaryInterceptor(marinaclient.TokenAuthInterceptor(bearerToken)),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return err
+	}
+
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
+
+	c := marinaclient.NewClient(conn, logger)
+
+	err = f(ctx, c)
+
+	return err
 }

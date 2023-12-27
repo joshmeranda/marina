@@ -12,9 +12,14 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ user.UserServiceServer = &Gateway{}
+
+const (
+	DefaultRoleName = "marina-user"
+)
 
 func (g *Gateway) allRolesExist(roles []string) bool {
 	for _, roleName := range roles {
@@ -61,6 +66,22 @@ func (g *Gateway) CreateUser(ctx context.Context, req *user.UserCreateRequest) (
 	return &emptypb.Empty{}, nil
 }
 
+func (g *Gateway) GetUser(ctx context.Context, req *user.UserGetRequest) (*user.User, error) {
+	var u marinav1.User
+	if err := g.kubeClient.Get(ctx, types.NamespacedName{
+		Name:      req.Name,
+		Namespace: g.namespace,
+	}, &u); err != nil {
+		return nil, err
+	}
+
+	return &user.User{
+		Name:     u.Name,
+		Password: []byte{},
+		Roles:    u.Spec.Roles,
+	}, nil
+}
+
 func (g *Gateway) DeleteUser(ctx context.Context, req *user.UserDeleteRequest) (*emptypb.Empty, error) {
 	user := marinav1.User{
 		ObjectMeta: metav1.ObjectMeta{
@@ -77,6 +98,10 @@ func (g *Gateway) DeleteUser(ctx context.Context, req *user.UserDeleteRequest) (
 }
 
 func (g *Gateway) UpdateUser(ctx context.Context, req *user.UserUpdateRequest) (*emptypb.Empty, error) {
+	if !g.allRolesExist(req.User.Roles) {
+		return nil, errors.NewBadRequest("one or more roles do not exist")
+	}
+
 	var user marinav1.User
 	if err := g.kubeClient.Get(ctx, types.NamespacedName{
 		Name:      req.User.Name,
@@ -89,8 +114,13 @@ func (g *Gateway) UpdateUser(ctx context.Context, req *user.UserUpdateRequest) (
 		user.Spec.Name = req.User.Name
 	}
 
-	if req.User.Password == nil {
-		user.Spec.Password = req.User.Password
+	if req.User.Password != nil {
+		hash, err := bcrypt.GenerateFromPassword([]byte(req.User.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, err
+		}
+
+		user.Spec.Password = hash
 	}
 
 	if req.User.Roles != nil {
@@ -106,7 +136,7 @@ func (g *Gateway) UpdateUser(ctx context.Context, req *user.UserUpdateRequest) (
 
 func (g *Gateway) ListUser(ctx context.Context, req *user.UserListRequest) (*user.UserListResponse, error) {
 	var list marinav1.UserList
-	if err := g.kubeClient.List(ctx, &list); err != nil {
+	if err := g.kubeClient.List(ctx, &list, client.InNamespace(g.namespace)); err != nil {
 		return nil, err
 	}
 

@@ -10,6 +10,8 @@ import "pkg/apis/core/core.proto";
 service UserService {
   rpc CreateUser(UserCreateRequest) returns (google.protobuf.Empty) {}
 
+  rpc GetUser(UserGetRequest) returns (User) {}
+
   rpc UpdateUser(UserUpdateRequest) returns (google.protobuf.Empty) {}
 
   rpc DeleteUser(UserDeleteRequest) returns (google.protobuf.Empty) {}
@@ -30,6 +32,10 @@ message UserQuery {
 
 message UserCreateRequest {
   User user = 1;
+}
+
+message UserGetRequest {
+  string name = 1;
 }
 
 message UserUpdateRequest {

@@ -19,6 +19,15 @@ func (c *Client) CreateUser(ctx context.Context, in *user.UserCreateRequest, opt
 	return &emptypb.Empty{}, nil
 }
 
+func (c *Client) GetUser(ctx context.Context, in *user.UserGetRequest, opts ...grpc.CallOption) (*user.User, error) {
+	user, err := c.userClient.GetUser(ctx, in, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
 func (c *Client) DeleteUser(ctx context.Context, in *user.UserDeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	_, err := c.userClient.DeleteUser(ctx, in, opts...)
 	if err != nil {

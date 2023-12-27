@@ -92,10 +92,6 @@ var _ = Describe("Admin Login", Ordered, func() {
 		}, "5s").Should(Equal(len(services)))
 	})
 
-	BeforeEach(func() {
-		fmt.Println()
-	})
-
 	AfterAll(func() {
 		cancel(fmt.Errorf("AfterAll test complete"))
 

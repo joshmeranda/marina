@@ -97,24 +97,28 @@ var _ = Describe("Gateway User Service", Ordered, func() {
 			resp, err := g.ListUser(ctx, req)
 			Expect(err).ToNot(HaveOccurred())
 
-			cleanResp := user.UserListResponse{
-				Users: make([]*user.User, len(resp.Users)),
+			type internalUser struct {
+				Name     string
+				Password []byte
+				Roles    []string
 			}
+
+			userList := make([]internalUser, len(resp.Users))
 			for i, u := range resp.Users {
-				cleanResp.Users[i] = &user.User{
+				userList[i] = internalUser{
 					Name:     u.Name,
 					Password: u.Password,
 					Roles:    u.Roles,
 				}
 			}
 
-			expected := []*user.User{
+			expected := []internalUser{
 				{
 					Name:  "bbaggins",
 					Roles: []string{"SomeRole"},
 				},
 			}
-			Expect(resp.Users).To(ConsistOf(expected))
+			Expect(userList).To(ConsistOf(expected))
 		})
 
 		It("can edit a user", func(ctx context.Context) {
