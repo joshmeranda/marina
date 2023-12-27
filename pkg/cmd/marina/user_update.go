@@ -50,9 +50,10 @@ func userUpdate(ctx *cli.Context) error {
 
 var (
 	userUpdateCommand = &cli.Command{
-		Name:   "update",
-		Usage:  "update a user's fields",
-		Action: userUpdate,
+		Name:      "update",
+		Usage:     "update a user's fields",
+		ArgsUsage: "<name>",
+		Action:    userUpdate,
 		Flags: []cli.Flag{
 			&cli.StringSliceFlag{
 				Name:  "add-role",

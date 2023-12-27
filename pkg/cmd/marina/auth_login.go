@@ -87,16 +87,16 @@ func githubLogin(ctx *cli.Context) error {
 
 var (
 	passwordLoginCommand = &cli.Command{
-		Name:        "password",
-		Description: "authenticate with a password",
-		Usage:       "marina auth password <user> [secret]",
-		Action:      passwordLogin,
+		Name:      "password",
+		Usage:     "authenticate with a password",
+		ArgsUsage: "<user> [secret]",
+		Action:    passwordLogin,
 	}
 
 	githubLoginCommand = &cli.Command{
-		Name:        "github",
-		Description: "authenticate with github",
-		Usage:       "marina auth github <user> [secret]",
-		Action:      githubLogin,
+		Name:      "github",
+		Usage:     "authenticate with github",
+		ArgsUsage: "<user> [secret]",
+		Action:    githubLogin,
 	}
 )

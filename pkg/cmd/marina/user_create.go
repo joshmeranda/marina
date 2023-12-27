@@ -41,9 +41,10 @@ func userCreate(ctx *cli.Context) error {
 
 var (
 	userCreateCommand = &cli.Command{
-		Name:   "create",
-		Usage:  "create a user",
-		Action: userCreate,
+		Name:      "create",
+		Usage:     "create a user",
+		ArgsUsage: "<name> <password>",
+		Action:    userCreate,
 		Flags: []cli.Flag{
 			&cli.StringSliceFlag{
 				Name:    "add-role",

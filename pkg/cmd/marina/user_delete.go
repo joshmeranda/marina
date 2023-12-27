@@ -35,8 +35,9 @@ func userDelete(ctx *cli.Context) error {
 
 var (
 	userDeleteCommand = &cli.Command{
-		Name:   "delete",
-		Usage:  "dewlete a user",
-		Action: userDelete,
+		Name:      "delete",
+		Usage:     "dewlete a user",
+		ArgsUsage: "<name>",
+		Action:    userDelete,
 	}
 )
