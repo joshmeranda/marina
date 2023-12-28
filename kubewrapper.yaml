@@ -1,0 +1,5 @@
+kubebuilder_bin: operator-sdk
+
+apis: pkg/controllers/api
+controllers: pkg/controllers
+manager_main: cmd/manager/main.go
