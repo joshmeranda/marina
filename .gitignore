@@ -1,3 +1,5 @@
 bin
 .vscode
 crds
+cover.out
+config
