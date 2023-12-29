@@ -58,6 +58,12 @@ var _ = Describe("User Updating Another User", Ordered, func() {
 		go func() {
 			GinkgoRecover()
 
+			runManagerWithArgs(ctx, nil)
+		}()
+
+		go func() {
+			GinkgoRecover()
+
 			runServerWithArgs(ctx, namespace, port, nil)
 		}()
 

@@ -41,6 +41,12 @@ var _ = Describe("Marina Check", func() {
 		go func() {
 			GinkgoRecover()
 
+			runManagerWithArgs(ctx, nil)
+		}()
+
+		go func() {
+			GinkgoRecover()
+
 			runServerWithArgs(ctx, namespace, port, nil)
 		}()
 	})

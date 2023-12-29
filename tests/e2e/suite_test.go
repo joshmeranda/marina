@@ -12,6 +12,7 @@ import (
 
 	terminalv1 "github.com/joshmeranda/marina-operator/api/v1"
 	marinaclient "github.com/joshmeranda/marina/pkg/client"
+	"github.com/joshmeranda/marina/pkg/cmd/manager"
 	"github.com/joshmeranda/marina/pkg/cmd/marina"
 	"github.com/joshmeranda/marina/pkg/cmd/server"
 	. "github.com/onsi/ginkgo/v2"
@@ -37,8 +38,9 @@ var (
 	k8sClient client.Client
 	testEnv   *envtest.Environment
 
-	clientApp cli.App
-	serverApp cli.App
+	clientApp  cli.App
+	serverApp  cli.App
+	managerApp cli.App
 
 	testDir        string
 	kubeconfigPath string
@@ -52,6 +54,7 @@ func TestE2E(t *testing.T) {
 var _ = BeforeSuite(func() {
 	clientApp = marina.App()
 	serverApp = server.App()
+	managerApp = manager.App()
 
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
@@ -147,12 +150,29 @@ func runServerWithArgs(ctx context.Context, namespace string, port int, addition
 		"--namespace", namespace,
 		"--port", fmt.Sprintf("%d", port),
 		"--kubeconfig", kubeconfigPath,
-		// "--silent",
+		"--silent",
 	}
 	args = append(args, additionalArgs...)
 
 	By("by starting marina server")
 	err := serverApp.RunContext(ctx, args)
+	Expect(err).ToNot(HaveOccurred())
+}
+
+func runManagerWithArgs(ctx context.Context, args []string) {
+	GinkgoHelper()
+	defer GinkgoRecover()
+
+	args = append([]string{"marina-manager",
+		"--kubeconfig", kubeconfigPath,
+		"--metrics-bind-address", "0",
+		"--health-probe-bind-address", "0",
+		"--webhook-port", "0",
+		// "--silent",
+	}, args...)
+
+	By("by starting marina manager")
+	err := managerApp.RunContext(ctx, args)
 	Expect(err).ToNot(HaveOccurred())
 }
 

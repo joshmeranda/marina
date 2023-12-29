@@ -55,6 +55,12 @@ var _ = Describe("Admin Login", Ordered, func() {
 		go func() {
 			GinkgoRecover()
 
+			runManagerWithArgs(ctx, nil)
+		}()
+
+		go func() {
+			GinkgoRecover()
+
 			runServerWithArgs(ctx, namespace, port, nil)
 		}()
 
