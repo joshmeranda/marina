@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "github.com/joshmeranda/marina/apis/user";
+
+import "google/protobuf/empty.proto";
+import "pkg/apis/core/core.proto";
+
+service UserService {
+  rpc CreateUser(UserCreateRequest) returns (google.protobuf.Empty) {}
+
+  rpc GetUser(UserGetRequest) returns (User) {}
+
+  rpc UpdateUser(UserUpdateRequest) returns (google.protobuf.Empty) {}
+
+  rpc DeleteUser(UserDeleteRequest) returns (google.protobuf.Empty) {}
+
+  rpc ListUser(UserListRequest) returns (UserListResponse) {}
+}
+
+message User {
+  string name = 1;
+  bytes password = 2;
+  repeated string roles = 3;
+}
+
+message UserQuery {
+  core.StringQuery name = 1;
+  core.CollectionQuery roles = 2; 
+}
+
+message UserCreateRequest {
+  User user = 1;
+}
+
+message UserGetRequest {
+  string name = 1;
+}
+
+message UserUpdateRequest {
+	User user = 2;
+}
+
+message UserDeleteRequest {
+  string name = 1;
+}
+
+message UserListRequest {
+  UserQuery query = 1;
+}
+
+message UserListResponse {
+  // users is the list of users with the passwords set to the empty strings
+  repeated User users = 2;
+}
