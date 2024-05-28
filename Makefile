@@ -10,7 +10,7 @@ VERSION ?= $(shell hack/version.sh)
 $(info using tag '${VERSION}')
 
 # SOURCES is the list of source files for the project
-SOURCES=go.mod go.sum $(shell find pkg -type f -name '*.go')
+SOURCES=go.mod go.sum $(shell find . 	-type f -name '*.go')
 
 GO_BUILD=go build
 GO_FMT=go fmt
@@ -112,18 +112,18 @@ lint: lint-go lint-helm ## Run all linting.
 
 marina: ${LOCALBIN}/marina ## Build marina binary.
 ${LOCALBIN}/marina: ./cmd/marina/main.go ${SOURCES}
-	GOBIN=${GOBIN} ${GO_BUILD} -o $@ -ldflags "-X github.com/joshmeranda/marina/pkg/cmd/marina.Version=${VERSION}" ./cmd/marina
+	GOBIN=${GOBIN} ${GO_BUILD} -o $@ -ldflags "-X github.com/joshmeranda/marina/cmd/marina.Version=${VERSION}" ./cmd/marina
 
 marina-server: ${LOCALBIN}/marina-server ## Build marina-server binary.
 ${LOCALBIN}/marina-server: ./cmd/marina-server/main.go ${SOURCES}
-	GOBIN=${GOBIN} ${GO_BUILD} -o $@ -ldflags "-X github.com/joshmeranda/marina/pkg/cmd/server.Version=${VERSION}" ./cmd/marina-server
+	GOBIN=${GOBIN} ${GO_BUILD} -o $@ -ldflags "-X github.com/joshmeranda/marina/cmd/server.Version=${VERSION}" ./cmd/marina-server
 
 ##@ Docker
 
 .PHONY: docker-marina-server
 
 docker-marina-server: ## Builder dockeri mage with marina-server.
-	docker build --file Dockerfile.marina --tag ${SERVER_IMAGE_TAG} .
+	docker build --file Dockerfile --tag ${SERVER_IMAGE_TAG} .
 
 ##@ Build Dependencies
 
