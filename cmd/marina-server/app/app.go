@@ -80,9 +80,28 @@ func start(ctx *cli.Context) error {
 		return err
 	}
 
-	client, err := getClusterClient(ctx)
+	var config *rest.Config
+
+	if kubeconfig := ctx.String("kubeconfig"); kubeconfig != "" {
+		if config, err = clientcmd.BuildConfigFromFlags("", kubeconfig); err != nil {
+			return fmt.Errorf("failed to get config from kubeconfig: %w", err)
+		}
+	} else if config, err = rest.InClusterConfig(); err != nil {
+		return fmt.Errorf("failed to get in-cluster config: %w", err)
+	}
+
+	schema := scheme.Scheme
+	if err := marinav1.AddToScheme(schema); err != nil {
+		return fmt.Errorf("failed to add marina scheme: %w", err)
+	}
+
+	opts := client.Options{
+		Scheme: schema,
+	}
+
+	client, err := client.New(config, opts)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create client: %w", err)
 	}
 
 	namespace := ctx.String("namespace")
@@ -98,7 +117,7 @@ func start(ctx *cli.Context) error {
 
 	gateway, err := marinagateway.NewGateway(
 		marinagateway.WithLogger(logger),
-		marinagateway.WithKubeClient(client),
+		marinagateway.WithKubeConfig(config),
 		marinagateway.WithNamespace(namespace),
 		marinagateway.WithAuthDriver(&authDriver),
 	)

@@ -30,7 +30,7 @@ var _ = Describe("Gateway Auth", Ordered, func() {
 
 		authDriver := authdriver.NewLocal(k8sClient, namespace)
 
-		g, err = gateway.NewGateway(gateway.WithLogger(logger), gateway.WithKubeClient(k8sClient), gateway.WithNamespace(namespace), gateway.WithAuthDriver(authDriver))
+		g, err = gateway.NewGateway(gateway.WithLogger(logger), gateway.WithKubeConfig(cfg), gateway.WithNamespace(namespace), gateway.WithAuthDriver(authDriver))
 		Expect(err).ToNot(HaveOccurred())
 
 		err = k8sClient.Create(context.Background(), &corev1.Namespace{

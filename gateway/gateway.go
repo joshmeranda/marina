@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -44,6 +44,8 @@ type Gateway struct {
 	health healthgrpc.HealthServer
 
 	kubeClient client.Client
+	kubeConfig *rest.Config
+
 	logger     *slog.Logger
 	namespace  string
 	authDriver authdriver.Driver
@@ -58,13 +60,17 @@ func NewGateway(opts ...Option) (*Gateway, error) {
 		opt(gateway)
 	}
 
-	if gateway.kubeClient == nil {
-		config, err := rest.InClusterConfig()
+	var err error
+
+	if gateway.kubeConfig == nil {
+		gateway.kubeConfig, err = rest.InClusterConfig()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get in-cluster config: %w", err)
 		}
+	}
 
-		schema := runtime.NewScheme()
+	if gateway.kubeClient == nil {
+		schema := scheme.Scheme
 		if err := marinav1.AddToScheme(schema); err != nil {
 			return nil, fmt.Errorf("failed to add marina scheme: %w", err)
 		}
@@ -73,7 +79,7 @@ func NewGateway(opts ...Option) (*Gateway, error) {
 			Scheme: schema,
 		}
 
-		gateway.kubeClient, err = client.New(config, opts)
+		gateway.kubeClient, err = client.New(gateway.kubeConfig, opts)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create client: %w", err)
 		}

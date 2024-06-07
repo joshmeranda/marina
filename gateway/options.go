@@ -4,14 +4,14 @@ import (
 	"log/slog"
 
 	"github.com/joshmeranda/marina/gateway/drivers/auth"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/client-go/rest"
 )
 
 type Option func(*Gateway)
 
-func WithKubeClient(client client.Client) Option {
+func WithKubeConfig(config *rest.Config) Option {
 	return func(g *Gateway) {
-		g.kubeClient = client
+		g.kubeConfig = config
 	}
 }
 

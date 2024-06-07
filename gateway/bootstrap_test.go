@@ -101,7 +101,7 @@ var _ = Describe("Gateway Bootstrap", Ordered, func() {
 			},
 		}
 
-		g, err = gateway.NewGateway(gateway.WithLogger(logger), gateway.WithKubeClient(k8sClient), gateway.WithNamespace(namespace))
+		g, err = gateway.NewGateway(gateway.WithLogger(logger), gateway.WithKubeConfig(cfg), gateway.WithNamespace(namespace))
 		Expect(err).ToNot(HaveOccurred())
 
 		err = k8sClient.Create(context.Background(), &corev1.Namespace{
