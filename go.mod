@@ -23,7 +23,7 @@ require (
 	sigs.k8s.io/controller-runtime v0.18.2
 )
 
-// replace github.com/joshmeranda/marina-operator => ../marina-operator
+replace github.com/joshmeranda/marina-operator => ../marina-operator
 
 require (
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect

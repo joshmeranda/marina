@@ -34,7 +34,7 @@ func generateRandomPassword(length int) ([]byte, error) {
 	return passwordRaw, nil
 }
 
-func (g *Gateway) ensureAdminRole(ctx context.Context) error {
+func (g *Gateway) ensureAdminRole(ctx context.Context) error { /*  */
 	// todo: should create this role in the helm chart
 	adminRole := rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
@@ -44,7 +44,7 @@ func (g *Gateway) ensureAdminRole(ctx context.Context) error {
 		Rules: []rbacv1.PolicyRule{
 			{
 				Verbs:     []string{rbacv1.VerbAll},
-				APIGroups: []string{"core.marina.io"},
+				APIGroups: []string{rbacv1.APIGroupAll},
 				Resources: []string{rbacv1.ResourceAll},
 			},
 		},

@@ -35,7 +35,7 @@ endif
 SERVER_IMAGE_TAG ?= joshmeranda/marina-server:${VERSION}
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.26.0
+ENVTEST_K8S_VERSION = 1.30.0
 
 # MARINA_OPERATOR_URL is the git repository URL for the marina-operator project.
 MARINA_OPERATOR_URL=git@github.com:joshmeranda/marina-operator.git
