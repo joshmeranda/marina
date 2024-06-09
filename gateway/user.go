@@ -21,11 +21,10 @@ const (
 	DefaultRoleName = "marina-user"
 )
 
-// todo: leaks role existance to users without read permissions to roles
-func (g *Gateway) allRolesExist(roles []string) bool {
+func (g *Gateway) allRolesExist(kubeClient client.Client, roles []string) bool {
 	for _, roleName := range roles {
 		var role rbacv1.Role
-		err := g.kubeClient.Get(context.Background(), types.NamespacedName{
+		err := kubeClient.Get(context.Background(), types.NamespacedName{
 			Name:      roleName,
 			Namespace: g.namespace,
 		}, &role)
@@ -39,7 +38,12 @@ func (g *Gateway) allRolesExist(roles []string) bool {
 }
 
 func (g *Gateway) CreateUser(ctx context.Context, req *user.UserCreateRequest) (*emptypb.Empty, error) {
-	if !g.allRolesExist(req.User.Roles) {
+	kubeClient, err := g.clientFromContext(ctx, client.Options{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to impersonate user: %w", err)
+	}
+
+	if !g.allRolesExist(kubeClient, req.User.Roles) {
 		return nil, errors.NewBadRequest("one or more roles do not exist")
 	}
 
@@ -60,12 +64,7 @@ func (g *Gateway) CreateUser(ctx context.Context, req *user.UserCreateRequest) (
 		},
 	}
 
-	ic, err := g.clientFromContext(ctx, client.Options{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to impersonate user: %w", err)
-	}
-
-	if err := ic.Create(ctx, &user); err != nil {
+	if err := kubeClient.Create(ctx, &user); err != nil {
 		return nil, err
 	}
 
@@ -73,13 +72,13 @@ func (g *Gateway) CreateUser(ctx context.Context, req *user.UserCreateRequest) (
 }
 
 func (g *Gateway) GetUser(ctx context.Context, req *user.UserGetRequest) (*user.User, error) {
-	ic, err := g.clientFromContext(ctx, client.Options{})
+	kubeClient, err := g.clientFromContext(ctx, client.Options{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to impersonate user: %w", err)
 	}
 
 	var u marinav1.User
-	if err := ic.Get(ctx, types.NamespacedName{
+	if err := kubeClient.Get(ctx, types.NamespacedName{
 		Name:      req.Name,
 		Namespace: g.namespace,
 	}, &u); err != nil {
@@ -100,11 +99,13 @@ func (g *Gateway) DeleteUser(ctx context.Context, req *user.UserDeleteRequest) (
 			Namespace: g.namespace,
 		},
 	}
-	ic, err := g.clientFromContext(ctx, client.Options{})
+
+	kubeClient, err := g.clientFromContext(ctx, client.Options{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to impersonate user: %w", err)
 	}
-	if err := ic.Delete(ctx, &user); err != nil {
+
+	if err := kubeClient.Delete(ctx, &user); err != nil {
 		return nil, err
 	}
 
@@ -112,7 +113,12 @@ func (g *Gateway) DeleteUser(ctx context.Context, req *user.UserDeleteRequest) (
 }
 
 func (g *Gateway) UpdateUser(ctx context.Context, req *user.UserUpdateRequest) (*emptypb.Empty, error) {
-	if !g.allRolesExist(req.User.Roles) {
+	kubeClient, err := g.clientFromContext(ctx, client.Options{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to impersonate user: %w", err)
+	}
+
+	if !g.allRolesExist(kubeClient, req.User.Roles) {
 		return nil, errors.NewBadRequest("one or more roles do not exist")
 	}
 
@@ -141,12 +147,7 @@ func (g *Gateway) UpdateUser(ctx context.Context, req *user.UserUpdateRequest) (
 		user.Spec.Roles = req.User.Roles
 	}
 
-	ic, err := g.clientFromContext(ctx, client.Options{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to impersonate user: %w", err)
-	}
-
-	if err := ic.Update(ctx, &user); err != nil {
+	if err := kubeClient.Update(ctx, &user); err != nil {
 		return nil, err
 	}
 
@@ -154,13 +155,13 @@ func (g *Gateway) UpdateUser(ctx context.Context, req *user.UserUpdateRequest) (
 }
 
 func (g *Gateway) ListUser(ctx context.Context, req *user.UserListRequest) (*user.UserListResponse, error) {
-	ic, err := g.clientFromContext(ctx, client.Options{})
+	kubeClient, err := g.clientFromContext(ctx, client.Options{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to impersonate user: %w", err)
 	}
 
 	var list marinav1.UserList
-	if err := ic.List(ctx, &list, client.InNamespace(g.namespace)); err != nil {
+	if err := kubeClient.List(ctx, &list, client.InNamespace(g.namespace)); err != nil {
 		return nil, err
 	}
 

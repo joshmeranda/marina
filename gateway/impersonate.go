@@ -19,9 +19,11 @@ func (g *Gateway) clientFromContext(ctx context.Context, opts client.Options) (c
 		return nil, fmt.Errorf("bug: could not get user from context: multiple authenticated users")
 	}
 
-	if len(foundUsers) == 1 {
-		config.Impersonate.UserName = fmt.Sprintf("system:serviceaccount:%s:%s", g.namespace, foundUsers[0])
+	if len(foundUsers) == 0 {
+		return g.kubeClient, nil
 	}
+
+	config.Impersonate.UserName = fmt.Sprintf("system:serviceaccount:%s:%s", g.namespace, foundUsers[0])
 
 	if opts.Scheme == nil {
 		schema := scheme.Scheme
