@@ -14,7 +14,7 @@ import (
 	terminalv1 "github.com/joshmeranda/marina-operator/api/v1"
 	marinacmd "github.com/joshmeranda/marina-operator/cmd"
 	marinaclient "github.com/joshmeranda/marina/client"
-	marinaserverapp "github.com/joshmeranda/marina/cmd/marina-server/app"
+	gatewayapp "github.com/joshmeranda/marina/cmd/gateway/app"
 	marinapp "github.com/joshmeranda/marina/cmd/marina/app"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -65,7 +65,7 @@ func TestE2E(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	clientApp = marinapp.App()
-	serverApp = marinaserverapp.App()
+	serverApp = gatewayapp.App()
 	marinaApp = marinacmd.App()
 
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))

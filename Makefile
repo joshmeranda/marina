@@ -32,7 +32,7 @@ endif
 # For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
 # marina.io/marina-operator-bundle:$VERSION and marina.io/marina-operator-catalog:$VERSION.
 # IMAGE_TAG_BASE ?= marina.io/marina-operator
-SERVER_IMAGE_TAG ?= joshmeranda/marina-server:${VERSION}
+GATEWAY_IMAGE_TAG ?= joshmeranda/gateway:${VERSION}
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.30.0
@@ -108,22 +108,22 @@ lint: lint-go lint-helm ## Run all linting.
 
 ##@ Build
 
-.PHONY: marina marina-server
+.PHONY: marina gateway
 
 marina: ${LOCALBIN}/marina ## Build marina binary.
 ${LOCALBIN}/marina: ./cmd/marina/main.go ${SOURCES}
 	GOBIN=${GOBIN} ${GO_BUILD} -o $@ -ldflags "-X github.com/joshmeranda/marina/cmd/marina.Version=${VERSION}" ./cmd/marina
 
-marina-server: ${LOCALBIN}/marina-server ## Build marina-server binary.
-${LOCALBIN}/marina-server: ./cmd/marina-server/main.go ${SOURCES}
-	GOBIN=${GOBIN} ${GO_BUILD} -o $@ -ldflags "-X github.com/joshmeranda/marina/cmd/server.Version=${VERSION}" ./cmd/marina-server
+gateway: ${LOCALBIN}/gateway ## Build marina-gateway binary.
+${LOCALBIN}/gateway: ./cmd/gateway/main.go ${SOURCES}
+	GOBIN=${GOBIN} ${GO_BUILD} -o $@ -ldflags "-X github.com/joshmeranda/marina/cmd/gateway.Version=${VERSION}" ./cmd/gateway
 
 ##@ Docker
 
-.PHONY: docker-marina-server
+.PHONY: docker
 
-docker-marina-server: ## Builder dockeri mage with marina-server.
-	docker build --file Dockerfile --tag ${SERVER_IMAGE_TAG} .
+docker: ## Builder dockeri mage with marina-gateway.
+	docker build --file Dockerfile --tag ${GATEWAY_IMAGE_TAG} .
 
 ##@ Build Dependencies
 

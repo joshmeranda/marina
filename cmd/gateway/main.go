@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/joshmeranda/marina/cmd/marina-server/app"
+	"github.com/joshmeranda/marina/cmd/gateway/app"
 )
 
 func main() {

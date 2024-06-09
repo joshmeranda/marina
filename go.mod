@@ -2,8 +2,6 @@ module github.com/joshmeranda/marina
 
 go 1.22.0
 
-toolchain go1.22.3
-
 require (
 	github.com/cli/oauth v1.0.1
 	github.com/golang-jwt/jwt/v5 v5.2.0
