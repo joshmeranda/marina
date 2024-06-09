@@ -34,7 +34,7 @@ func generateRandomPassword(length int) ([]byte, error) {
 	return passwordRaw, nil
 }
 
-func (g *Gateway) ensureRole(ctx context.Context) error {
+func (g *Gateway) ensureAdminRole(ctx context.Context) error {
 	// todo: should create this role in the helm chart
 	adminRole := rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
@@ -44,7 +44,7 @@ func (g *Gateway) ensureRole(ctx context.Context) error {
 		Rules: []rbacv1.PolicyRule{
 			{
 				Verbs:     []string{rbacv1.VerbAll},
-				APIGroups: []string{"terminal.marina.io"},
+				APIGroups: []string{"core.marina.io"},
 				Resources: []string{rbacv1.ResourceAll},
 			},
 		},
@@ -90,7 +90,7 @@ func (g *Gateway) ensureTokenSigningSecret(ctx context.Context) error {
 	return nil
 }
 
-func (g *Gateway) ensureUser(ctx context.Context) error {
+func (g *Gateway) ensureAdminUser(ctx context.Context) error {
 	secret := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      bootstrapSecretName,
@@ -143,11 +143,11 @@ func (g *Gateway) ensureUser(ctx context.Context) error {
 func (g *Gateway) Bootstrap(ctx context.Context) error {
 	g.logger.Info("bootstrapping cluster")
 
-	if err := g.ensureRole(ctx); err != nil {
+	if err := g.ensureAdminRole(ctx); err != nil {
 		return fmt.Errorf("failed to create admin role: %w", err)
 	}
 
-	if err := g.ensureUser(ctx); err != nil {
+	if err := g.ensureAdminUser(ctx); err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
 	}
 

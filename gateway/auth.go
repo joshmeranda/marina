@@ -22,7 +22,7 @@ const (
 	TokenSigningSecretName  = "jwt-signing-key"
 	TokenSigningSecretField = "value"
 
-	UserAccessFieldKeyName = "user-access-list"
+	UserMetadataFieldName = "username"
 )
 
 // todo: add serviceaccount token?
@@ -77,7 +77,8 @@ func (g *Gateway) TokenAuthInterceptor() grpc.UnaryServerInterceptor {
 		// todo: we aren't actually checking for authentication here
 		// todo: if the claim is expired, we should return an error
 
-		_ = customClaim
+		md.Set(UserMetadataFieldName, customClaim.User)
+		ctx = metadata.NewIncomingContext(ctx, md)
 
 		resp, err = handler(ctx, req)
 

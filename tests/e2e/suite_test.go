@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	terminalv1 "github.com/joshmeranda/marina-operator/api/v1"
@@ -48,7 +49,18 @@ var (
 
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "E2E Suite")
+
+	suiteConfig, reporterConfig := GinkgoConfiguration()
+
+	if focusFiles := os.Getenv("FOCUS_FILES"); focusFiles != "" {
+		suiteConfig.FocusFiles = strings.Split(focusFiles, ",")
+	}
+
+	if focusStrings := os.Getenv("FOCUS_STRINGS"); focusStrings != "" {
+		suiteConfig.FocusFiles = strings.Split(focusStrings, ",")
+	}
+
+	RunSpecs(t, "E2E Suite", suiteConfig, reporterConfig)
 }
 
 var _ = BeforeSuite(func() {
@@ -150,7 +162,7 @@ func runServerWithArgs(ctx context.Context, namespace string, port int, addition
 		"--namespace", namespace,
 		"--port", fmt.Sprintf("%d", port),
 		"--kubeconfig", kubeconfigPath,
-		"--silent",
+		// "--silent",
 	}
 	args = append(args, additionalArgs...)
 

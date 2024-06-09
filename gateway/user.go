@@ -21,6 +21,7 @@ const (
 	DefaultRoleName = "marina-user"
 )
 
+// todo: leaks role existance to users without read permissions to roles
 func (g *Gateway) allRolesExist(roles []string) bool {
 	for _, roleName := range roles {
 		var role rbacv1.Role
@@ -59,7 +60,12 @@ func (g *Gateway) CreateUser(ctx context.Context, req *user.UserCreateRequest) (
 		},
 	}
 
-	if err := g.kubeClient.Create(ctx, &user); err != nil {
+	ic, err := g.clientFromContext(ctx, client.Options{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to impersonate user: %w", err)
+	}
+
+	if err := ic.Create(ctx, &user); err != nil {
 		return nil, err
 	}
 
@@ -67,8 +73,13 @@ func (g *Gateway) CreateUser(ctx context.Context, req *user.UserCreateRequest) (
 }
 
 func (g *Gateway) GetUser(ctx context.Context, req *user.UserGetRequest) (*user.User, error) {
+	ic, err := g.clientFromContext(ctx, client.Options{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to impersonate user: %w", err)
+	}
+
 	var u marinav1.User
-	if err := g.kubeClient.Get(ctx, types.NamespacedName{
+	if err := ic.Get(ctx, types.NamespacedName{
 		Name:      req.Name,
 		Namespace: g.namespace,
 	}, &u); err != nil {
@@ -89,8 +100,11 @@ func (g *Gateway) DeleteUser(ctx context.Context, req *user.UserDeleteRequest) (
 			Namespace: g.namespace,
 		},
 	}
-
-	if err := g.kubeClient.Delete(ctx, &user); err != nil {
+	ic, err := g.clientFromContext(ctx, client.Options{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to impersonate user: %w", err)
+	}
+	if err := ic.Delete(ctx, &user); err != nil {
 		return nil, err
 	}
 
@@ -127,7 +141,12 @@ func (g *Gateway) UpdateUser(ctx context.Context, req *user.UserUpdateRequest) (
 		user.Spec.Roles = req.User.Roles
 	}
 
-	if err := g.kubeClient.Update(ctx, &user); err != nil {
+	ic, err := g.clientFromContext(ctx, client.Options{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to impersonate user: %w", err)
+	}
+
+	if err := ic.Update(ctx, &user); err != nil {
 		return nil, err
 	}
 
@@ -135,8 +154,13 @@ func (g *Gateway) UpdateUser(ctx context.Context, req *user.UserUpdateRequest) (
 }
 
 func (g *Gateway) ListUser(ctx context.Context, req *user.UserListRequest) (*user.UserListResponse, error) {
+	ic, err := g.clientFromContext(ctx, client.Options{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to impersonate user: %w", err)
+	}
+
 	var list marinav1.UserList
-	if err := g.kubeClient.List(ctx, &list, client.InNamespace(g.namespace)); err != nil {
+	if err := ic.List(ctx, &list, client.InNamespace(g.namespace)); err != nil {
 		return nil, err
 	}
 

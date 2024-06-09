@@ -98,7 +98,7 @@ var _ = Describe("User Updating Another User", Ordered, func() {
 			}
 
 			return n
-		}, "5s").Should(Equal(len(services)))
+		}, "10s").Should(Equal(len(services)))
 
 		By("receiving bearer token from gateway")
 		passwordSecret := corev1.Secret{
@@ -142,7 +142,6 @@ var _ = Describe("User Updating Another User", Ordered, func() {
 	})
 
 	It("cannot update another user", func() {
-		Skip("not yet supported")
 		err = clientApp.RunContext(ctx, []string{"marina", "--address", fmt.Sprintf("127.0.0.1:%d", port), "--config-dir", configDir, "user", "update", "--password", "new-secret", "fbaggins"})
 		Expect(err).To(HaveOccurred())
 	})
