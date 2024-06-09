@@ -9,7 +9,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/golang/protobuf v1.5.4
 	github.com/google/go-github/v57 v57.0.0
-	github.com/joshmeranda/marina-operator v0.0.0-20240527232704-63c18373419c
+	github.com/joshmeranda/marina-operator v0.0.0-20240609181103-af3f36cf5b4c
 	github.com/onsi/ginkgo/v2 v2.19.0
 	github.com/onsi/gomega v1.33.1
 	github.com/urfave/cli/v2 v2.27.2
@@ -23,14 +23,9 @@ require (
 	sigs.k8s.io/controller-runtime v0.18.2
 )
 
-replace github.com/joshmeranda/marina-operator => ../marina-operator
+// replace github.com/joshmeranda/marina-operator => ../marina-operator
 
 require (
-	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
-	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
-	github.com/nxadm/tail v1.4.8 // indirect
-	github.com/onsi/ginkgo v1.16.5 // indirect
-	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cli/browser v1.0.0 // indirect
@@ -47,6 +42,7 @@ require (
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
+	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
