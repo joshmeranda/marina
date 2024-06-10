@@ -6,8 +6,11 @@ metadata:
     {{- include "marina.labels" . | nindent 4 }}
 rules:
 - apiGroups: ["core.marina.io"]
-  resources: ["*"]
+  resources: ["users", "terminals"]
   verbs: ["create", "delete", "get", "list", "update", "watch"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "delete", "create"]
 - apiGroups: ["rbac.authorization.k8s.io"]
   resources: ["roles", "rolebindings"]
   verbs: ["create", "delete", "get"]
