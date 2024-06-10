@@ -11,7 +11,7 @@ import (
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 )
 
-func healthCheck(ctx *cli.Context) error {
+func health(ctx *cli.Context) error {
 	var services []string
 	if ctx.NArg() == 0 {
 		services = []string{
@@ -46,8 +46,8 @@ func healthCheck(ctx *cli.Context) error {
 
 var (
 	healthCheckCommand = &cli.Command{
-		Name:   "check",
+		Name:   "health",
 		Usage:  "check the health of the gateway",
-		Action: healthCheck,
+		Action: health,
 	}
 )

@@ -7,16 +7,18 @@ COPY go.mod go.mod
 COPY go.sum go.sum
 RUN go mod download
 
+RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.26
+
 COPY . /src
 
 RUN cd /src && \
     make gateway \
     && cp bin/gateway /gateway
 
+# use smaller base image
 FROM golang:1.22
 
-RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.26
-
 COPY --from=builder /gateway /gateway
+COPY --from=builder /go/bin/grpc-health-probe /grpc-health-probe
 
-ENTRYPOINT ["/marina-server"]
+ENTRYPOINT ["/gateway"]
