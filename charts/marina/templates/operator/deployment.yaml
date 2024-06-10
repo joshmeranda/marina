@@ -39,14 +39,6 @@ spec:
           imagePullPolicy: {{ .Values.operator.image.pullPolicy }}
           resources:
             {{- toYaml .Values.operator.resources | nindent 12 }}
-          {{- with .Values.operator.volumeMounts }}
-          volumeMounts:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-      {{- with .Values.operator.volumes }}
-      volumes:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       {{- with .Values.operator.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

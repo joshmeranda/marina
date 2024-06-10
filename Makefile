@@ -32,7 +32,7 @@ endif
 # For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
 # marina.io/marina-operator-bundle:$VERSION and marina.io/marina-operator-catalog:$VERSION.
 # IMAGE_TAG_BASE ?= marina.io/marina-operator
-GATEWAY_IMAGE_TAG ?= joshmeranda/gateway:${VERSION}
+GATEWAY_IMAGE_TAG ?= joshmeranda/marina-gateway:${VERSION}
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.30.0

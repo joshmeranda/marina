@@ -44,7 +44,7 @@ func (g *Gateway) ensureAdminRole(ctx context.Context) error { /*  */
 		Rules: []rbacv1.PolicyRule{
 			{
 				APIGroups: []string{"core.marina.io"},
-				Resources: []string{rbacv1.ResourceAll},
+				Resources: []string{"users", "terminals"},
 				Verbs:     []string{"create", "delete", "get", "list", "update", "watch"},
 			},
 			{

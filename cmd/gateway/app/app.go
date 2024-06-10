@@ -21,35 +21,6 @@ import (
 
 var Version string
 
-func getClusterClient(ctx *cli.Context) (client.Client, error) {
-	var config *rest.Config
-	var err error
-
-	if kubeconfig := ctx.String("kubeconfig"); kubeconfig != "" {
-		if config, err = clientcmd.BuildConfigFromFlags("", kubeconfig); err != nil {
-			return nil, fmt.Errorf("failed to get config from kubeconfig: %w", err)
-		}
-	} else if config, err = rest.InClusterConfig(); err != nil {
-		return nil, fmt.Errorf("failed to get in-cluster config: %w", err)
-	}
-
-	schema := scheme.Scheme
-	if err := marinav1.AddToScheme(schema); err != nil {
-		return nil, fmt.Errorf("failed to add marina scheme: %w", err)
-	}
-
-	opts := client.Options{
-		Scheme: schema,
-	}
-
-	client, err := client.New(config, opts)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create client: %w", err)
-	}
-
-	return client, nil
-}
-
 func getLogger(ctx *cli.Context) *slog.Logger {
 	var out io.Writer = os.Stdout
 	opts := &slog.HandlerOptions{}
