@@ -157,7 +157,7 @@ func runServerWithArgs(ctx context.Context, namespace string, port int, addition
 	GinkgoHelper()
 	defer GinkgoRecover()
 
-	args := []string{"marina-server",
+	args := []string{"gateway",
 		"--etcd", testEnv.ControlPlane.Etcd.URL.String(),
 		"--namespace", namespace,
 		"--port", fmt.Sprintf("%d", port),

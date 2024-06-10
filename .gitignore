@@ -1,6 +1,6 @@
 bin
 .vscode
-crds
+/crds
 cover.out
 config
 marina-operator

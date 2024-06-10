@@ -35,7 +35,6 @@ Common labels
 */}}
 {{- define "marina.labels" -}}
 helm.sh/chart: {{ include "marina.chart" . }}
-{{ include "marina.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -43,10 +42,34 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
-Selector labels
+Gateway Labels
 */}}
-{{- define "marina.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "marina.name" . }}
+{{- define "marina.gateway.labels" -}}
+{{ include "marina.labels" . }}
+app.kubernetes.io/component: "gateway"
+{{- end }}
+
+{{/*
+Gateway Selector Labels
+*/}}
+{{- define "marina.gateway.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "marina.name" . }}-gateway
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Operator Labels
+*/}}
+{{- define "marina.operator.labels" -}}
+{{ include "marina.labels" . }}
+app.kubernetes.io/component: "operator"
+{{- end }}
+
+{{/*
+Gateway Selector Labels
+*/}}
+{{- define "marina.operator.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "marina.name" . }}-operator
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 

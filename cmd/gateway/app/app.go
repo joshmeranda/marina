@@ -145,9 +145,9 @@ func start(ctx *cli.Context) error {
 
 func App() cli.App {
 	return cli.App{
-		Name:        "marina-server",
+		Name:        "gateway",
 		Version:     Version,
-		Description: "run the marina gateay server",
+		Description: "run the marina gateay",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "namespace",
