@@ -5,12 +5,14 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/joshmeranda/marina/apis/user"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -34,8 +36,7 @@ func generateRandomPassword(length int) ([]byte, error) {
 	return passwordRaw, nil
 }
 
-func (g *Gateway) ensureAdminRole(ctx context.Context) error { /*  */
-	// todo: should create this role in the helm chart
+func (g *Gateway) ensureAdminRole(ctx context.Context) error {
 	adminRole := rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "admin",
@@ -65,14 +66,33 @@ func (g *Gateway) ensureAdminRole(ctx context.Context) error { /*  */
 		},
 	}
 
-	if err := g.kubeClient.Create(ctx, &adminRole); errors.IsAlreadyExists(err) {
-		g.logger.Debug("admin role already exists")
-		return nil
-	} else if err != nil {
-		return err
+	// todo: could be configurable
+	backoff := wait.Backoff{
+		Duration: time.Second,
+		Factor:   1.1,
+		Steps:    20,
+		Cap:      time.Minute * 5,
 	}
 
-	g.logger.Info("created admin role")
+	condition := func(ctx context.Context) (bool, error) {
+		err := g.kubeClient.Create(ctx, &adminRole)
+
+		switch {
+		case err == nil:
+			g.logger.Info("created admin role")
+			return true, nil
+		case errors.IsAlreadyExists(err):
+			g.logger.Debug("admin role already exists")
+			return true, nil
+		default:
+			g.logger.Warn("failed to create admin role, retrying", "error", err)
+			return false, nil
+		}
+	}
+
+	if err := wait.ExponentialBackoffWithContext(ctx, backoff, condition); err != nil {
+		return fmt.Errorf("failed to create admin role: %w", err)
+	}
 
 	return nil
 }
