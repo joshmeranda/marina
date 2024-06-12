@@ -2,6 +2,7 @@ package app
 
 import "github.com/urfave/cli/v2"
 
+// todo: add whoami command
 var (
 	authCommand = &cli.Command{
 		Name:  "auth",

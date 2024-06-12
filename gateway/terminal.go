@@ -25,7 +25,9 @@ func (g *Gateway) CreateTerminal(ctx context.Context, req *terminal.TerminalCrea
 			Name:      req.Name.Name,
 			Namespace: req.Name.Namespace,
 		},
-		Spec: marinav1.TerminalSpec{},
+		Spec: marinav1.TerminalSpec{
+			Image: req.Spec.Image,
+		},
 	}
 
 	if err := kubeClient.Create(ctx, &terminal); err != nil {
