@@ -1,0 +1,9 @@
+Marina has been installed!
+
+To login as administrator run:
+
+```
+MARINA_GATEWAY_ADDRESS={{.Values.gateway.hostname}}:{{.Values.gateway.service.port}} marina auth login password admin $(kubectl get secret -n {{ .Release.Namespace }} marina-bootstrap-password --template '{{ "{{" }} .data.password {{ "}}" }}' | base64 --decode)
+```
+
+Happy Containering!

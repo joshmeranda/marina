@@ -18,6 +18,9 @@ serviceAccount:
     create: true
 
 gateway:
+  # Fully qualified hostname for the gateway
+  hostname: ""
+
   replicaCount: 1
 
   image:
