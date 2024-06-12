@@ -56,6 +56,9 @@ var _ = Describe("Gateway Terminal Service", Ordered, func() {
 				Name:      "terminal-test",
 				Namespace: namespace,
 			},
+			Spec: &terminal.TerminalSpec{
+				Image: "repository/image:tag",
+			},
 		}
 		_, err := g.CreateTerminal(ctx, req)
 		Expect(err).NotTo(HaveOccurred())

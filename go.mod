@@ -7,7 +7,6 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/golang/protobuf v1.5.4
 	github.com/google/go-github/v57 v57.0.0
-	github.com/joshmeranda/marina-operator v0.0.0-20240609181103-af3f36cf5b4c
 	github.com/onsi/ginkgo/v2 v2.19.0
 	github.com/onsi/gomega v1.33.1
 	github.com/urfave/cli/v2 v2.27.2
@@ -20,8 +19,6 @@ require (
 	k8s.io/client-go v0.30.0
 	sigs.k8s.io/controller-runtime v0.18.2
 )
-
-// replace github.com/joshmeranda/marina-operator => ../marina-operator
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect

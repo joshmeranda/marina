@@ -65,7 +65,7 @@ var _ = Describe("Marina Check", func() {
 
 	It("receives client health status", func() {
 		Eventually(func() error {
-			err := clientApp.RunContext(ctx, []string{"marina", "--address", fmt.Sprintf("127.0.0.1:%d", port), "check"})
+			err := clientApp.RunContext(ctx, []string{"marina", "--address", fmt.Sprintf("127.0.0.1:%d", port), "health"})
 			return err
 		}, "5s").Should(Succeed())
 	})
