@@ -8,8 +8,8 @@ import (
 	"os"
 
 	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
-	authapis "github.com/joshmeranda/marina/apis/auth"
 	marinagateway "github.com/joshmeranda/marina/gateway"
+	authapis "github.com/joshmeranda/marina/gateway/api/auth"
 	"github.com/joshmeranda/marina/gateway/drivers/auth"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"

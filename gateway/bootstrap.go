@@ -7,7 +7,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/joshmeranda/marina/apis/user"
+	"github.com/joshmeranda/marina/gateway/api/user"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"

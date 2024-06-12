@@ -80,7 +80,7 @@ clean: ## Clean up build artifacts
 
 ##@ Development
 
-PROTOS=$(shell find pkg/apis -type f -name '*.proto')
+PROTOS=$(shell find gateway/api -type f -name '*.proto')
 .PHOTO: proto-generate
 proto-generate: ## Generate grpc protobuf api code.
 	protoc -I=. \

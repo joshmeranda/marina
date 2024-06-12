@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/joshmeranda/marina/apis/auth"
+	"github.com/joshmeranda/marina/gateway/api/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	corev1 "k8s.io/api/core/v1"

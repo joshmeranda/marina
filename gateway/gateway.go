@@ -7,9 +7,9 @@ import (
 	"os"
 
 	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
-	"github.com/joshmeranda/marina/apis/auth"
-	"github.com/joshmeranda/marina/apis/terminal"
-	"github.com/joshmeranda/marina/apis/user"
+	"github.com/joshmeranda/marina/gateway/api/auth"
+	"github.com/joshmeranda/marina/gateway/api/terminal"
+	"github.com/joshmeranda/marina/gateway/api/user"
 	authdriver "github.com/joshmeranda/marina/gateway/drivers/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"

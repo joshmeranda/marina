@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/joshmeranda/marina/apis/auth"
+	"github.com/joshmeranda/marina/gateway/api/auth"
 )
 
 type MultiAuth struct {

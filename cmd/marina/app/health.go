@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/joshmeranda/marina/apis/auth"
-	"github.com/joshmeranda/marina/apis/terminal"
-	"github.com/joshmeranda/marina/apis/user"
+	"github.com/joshmeranda/marina/gateway/api/auth"
+	"github.com/joshmeranda/marina/gateway/api/terminal"
+	"github.com/joshmeranda/marina/gateway/api/user"
 	"github.com/urfave/cli/v2"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 )

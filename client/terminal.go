@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/joshmeranda/marina/apis/terminal"
+	"github.com/joshmeranda/marina/gateway/api/terminal"
 	"google.golang.org/grpc"
 )
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/joshmeranda/marina/apis/auth"
+	"github.com/joshmeranda/marina/gateway/api/auth"
 	"github.com/joshmeranda/marina/gateway/drivers/storage"
 )
 

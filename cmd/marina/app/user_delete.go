@@ -3,7 +3,7 @@ package app
 import (
 	"fmt"
 
-	"github.com/joshmeranda/marina/apis/user"
+	"github.com/joshmeranda/marina/gateway/api/user"
 	"github.com/urfave/cli/v2"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/joshmeranda/marina/apis/core"
+	"github.com/joshmeranda/marina/gateway/api/core"
 )
 
 func TestStringQuery(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
-	"github.com/joshmeranda/marina/apis/user"
+	"github.com/joshmeranda/marina/gateway/api/user"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/protobuf/types/known/emptypb"
 	rbacv1 "k8s.io/api/rbac/v1"

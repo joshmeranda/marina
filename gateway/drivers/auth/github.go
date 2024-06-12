@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/go-github/v57/github"
-	"github.com/joshmeranda/marina/apis/auth"
+	"github.com/joshmeranda/marina/gateway/api/auth"
 )
 
 type Github struct{}

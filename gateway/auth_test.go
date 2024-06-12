@@ -5,9 +5,9 @@ import (
 	"io"
 	"log/slog"
 
-	"github.com/joshmeranda/marina/apis/auth"
-	"github.com/joshmeranda/marina/apis/user"
 	"github.com/joshmeranda/marina/gateway"
+	"github.com/joshmeranda/marina/gateway/api/auth"
+	"github.com/joshmeranda/marina/gateway/api/user"
 	authdriver "github.com/joshmeranda/marina/gateway/drivers/auth"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/joshmeranda/marina/apis/core"
-	"github.com/joshmeranda/marina/apis/terminal"
+	"github.com/joshmeranda/marina/gateway/api/core"
+	"github.com/joshmeranda/marina/gateway/api/terminal"
 	"github.com/urfave/cli/v2"
 )
 

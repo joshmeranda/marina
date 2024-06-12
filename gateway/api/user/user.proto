@@ -2,10 +2,10 @@ syntax = "proto3";
 
 package user;
 
-option go_package = "github.com/joshmeranda/marina/apis/user";
+option go_package = "github.com/joshmeranda/marina/gateway/api/user";
 
 import "google/protobuf/empty.proto";
-import "pkg/apis/core/core.proto";
+import "gateway/api/core/core.proto";
 
 service UserService {
   rpc CreateUser(UserCreateRequest) returns (google.protobuf.Empty) {}

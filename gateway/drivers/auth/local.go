@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
-	"github.com/joshmeranda/marina/apis/auth"
+	"github.com/joshmeranda/marina/gateway/api/auth"
 	"golang.org/x/crypto/bcrypt"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"

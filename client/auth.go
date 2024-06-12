@@ -6,7 +6,7 @@ import (
 
 	"github.com/cli/oauth"
 	"github.com/cli/oauth/api"
-	"github.com/joshmeranda/marina/apis/auth"
+	"github.com/joshmeranda/marina/gateway/api/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )

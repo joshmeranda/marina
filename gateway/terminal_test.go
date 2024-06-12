@@ -6,9 +6,9 @@ import (
 	"os"
 
 	terminalv1 "github.com/joshmeranda/marina-operator/api/v1"
-	"github.com/joshmeranda/marina/apis/core"
-	"github.com/joshmeranda/marina/apis/terminal"
 	"github.com/joshmeranda/marina/gateway"
+	"github.com/joshmeranda/marina/gateway/api/core"
+	"github.com/joshmeranda/marina/gateway/api/terminal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"

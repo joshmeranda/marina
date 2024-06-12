@@ -8,10 +8,10 @@ import (
 	"os"
 	"path"
 
-	"github.com/joshmeranda/marina/apis/auth"
-	"github.com/joshmeranda/marina/apis/terminal"
-	"github.com/joshmeranda/marina/apis/user"
 	marinaclient "github.com/joshmeranda/marina/client"
+	"github.com/joshmeranda/marina/gateway/api/auth"
+	"github.com/joshmeranda/marina/gateway/api/terminal"
+	"github.com/joshmeranda/marina/gateway/api/user"
 	"github.com/phayes/freeport"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

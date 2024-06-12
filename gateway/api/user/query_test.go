@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
-	core "github.com/joshmeranda/marina/apis/core"
-	"github.com/joshmeranda/marina/apis/user"
+	core "github.com/joshmeranda/marina/gateway/api/core"
+	"github.com/joshmeranda/marina/gateway/api/user"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

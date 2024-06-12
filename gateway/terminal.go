@@ -9,7 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/joshmeranda/marina/apis/terminal"
+	"github.com/joshmeranda/marina/gateway/api/terminal"
 )
 
 var _ terminal.TerminalServiceServer = &Gateway{}

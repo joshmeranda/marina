@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v5.27.0
-// source: pkg/apis/terminal/terminal.proto
+// source: gateway/api/terminal/terminal.proto
 
 package terminal
 
@@ -143,5 +143,5 @@ var TerminalService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "pkg/apis/terminal/terminal.proto",
+	Metadata: "gateway/api/terminal/terminal.proto",
 }

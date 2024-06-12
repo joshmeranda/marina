@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/joshmeranda/marina/apis/auth"
+	"github.com/joshmeranda/marina/gateway/api/auth"
 	"github.com/urfave/cli/v2"
 )
 
