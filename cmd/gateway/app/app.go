@@ -156,9 +156,8 @@ func App() cli.App {
 				Aliases: []string{"s"},
 			},
 			&cli.BoolFlag{
-				Name:    "verbose",
-				Usage:   "run verbosely",
-				Aliases: []string{"v"},
+				Name:  "verbose",
+				Usage: "run verbosely",
 			},
 		},
 		Action: start,

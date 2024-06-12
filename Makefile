@@ -104,15 +104,15 @@ lint: lint-go lint-helm ## Run all linting.
 
 marina: ${LOCALBIN}/marina ## Build marina binary.
 ${LOCALBIN}/marina: ./cmd/marina/main.go ${SOURCES}
-	GOBIN=${GOBIN} ${GO_BUILD} -o $@ -ldflags "-X github.com/joshmeranda/marina/cmd/marina.Version=${VERSION}" ./cmd/marina
+	GOBIN=${GOBIN} ${GO_BUILD} -o $@ -ldflags "-X github.com/joshmeranda/marina/cmd/marina/app.Version=${VERSION}" ./cmd/marina
 
 gateway: ${LOCALBIN}/gateway ## Build gateway binary.
 ${LOCALBIN}/gateway: ./cmd/gateway/main.go ${SOURCES}
-	GOBIN=${GOBIN} ${GO_BUILD} -o $@ -ldflags "-X github.com/joshmeranda/marina/cmd/gateway.Version=${VERSION}" ./cmd/gateway
+	GOBIN=${GOBIN} ${GO_BUILD} -o $@ -ldflags "-X github.com/joshmeranda/marina/cmd/gateway/app.Version=${VERSION}" ./cmd/gateway
 
 operator: ${LOCALBIN}/operator ## Build operator binary.
 ${LOCALBIN}/operator: ./cmd/operator/main.go ${SOURCES}
-	GOBIN=${GOBIN} ${GO_BUILD} -o $@ -ldflags "-X github.com/joshmeranda/marina/cmd/operator.Version=${VERSION}" ./cmd/operator
+	GOBIN=${GOBIN} ${GO_BUILD} -o $@ -ldflags "-X github.com/joshmeranda/marina/cmd/operator/app.Version=${VERSION}" ./cmd/operator
 
 ##@ Docker
 

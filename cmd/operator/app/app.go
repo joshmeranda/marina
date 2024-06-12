@@ -42,6 +42,8 @@ import (
 	// +kubebuilder:scaffold:imports
 )
 
+var Version string
+
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
@@ -166,6 +168,7 @@ func App() cli.App {
 		Name:        "manager",
 		Description: "run the marina operator manager",
 		Action:      start,
+		Version:     Version,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "kubeconfig",
