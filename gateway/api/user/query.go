@@ -1,7 +1,7 @@
 package user
 
 import (
-	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
+	marinav1 "github.com/joshmeranda/marina/api/v1"
 )
 
 func (q *UserQuery) Matches(user *marinav1.User) (bool, error) {

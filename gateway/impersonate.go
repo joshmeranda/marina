@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
+	marinav1 "github.com/joshmeranda/marina/api/v1"
 	"google.golang.org/grpc/metadata"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"

@@ -11,11 +11,11 @@ import (
 	"strings"
 	"testing"
 
-	terminalv1 "github.com/joshmeranda/marina-operator/api/v1"
-	marinacmd "github.com/joshmeranda/marina-operator/cmd"
+	terminalv1 "github.com/joshmeranda/marina/api/v1"
 	marinaclient "github.com/joshmeranda/marina/client"
 	gatewayapp "github.com/joshmeranda/marina/cmd/gateway/app"
 	marinapp "github.com/joshmeranda/marina/cmd/marina/app"
+	operatorapp "github.com/joshmeranda/marina/cmd/operator/app"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/urfave/cli/v2"
@@ -66,7 +66,7 @@ func TestE2E(t *testing.T) {
 var _ = BeforeSuite(func() {
 	clientApp = marinapp.App()
 	serverApp = gatewayapp.App()
-	marinaApp = marinacmd.App()
+	marinaApp = operatorapp.App()
 
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
@@ -175,7 +175,7 @@ func runOperatorWithArgs(ctx context.Context, args []string) {
 	GinkgoHelper()
 	defer GinkgoRecover()
 
-	args = append([]string{"marina-operator",
+	args = append([]string{"operator",
 		"--kubeconfig", kubeconfigPath,
 		"--metrics-bind-address", "0",
 		"--health-probe-bind-address", "0",

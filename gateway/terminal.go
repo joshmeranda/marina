@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
+	marinav1 "github.com/joshmeranda/marina/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 

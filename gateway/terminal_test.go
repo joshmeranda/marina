@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"os"
 
-	terminalv1 "github.com/joshmeranda/marina-operator/api/v1"
+	terminalv1 "github.com/joshmeranda/marina/api/v1"
 	"github.com/joshmeranda/marina/gateway"
 	"github.com/joshmeranda/marina/gateway/api/core"
 	"github.com/joshmeranda/marina/gateway/api/terminal"

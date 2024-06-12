@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"sync"
 
-	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
+	marinav1 "github.com/joshmeranda/marina/api/v1"
 	"github.com/joshmeranda/marina/gateway"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

@@ -15,8 +15,8 @@ RUN cd /src && \
     make gateway \
     && cp bin/gateway /gateway
 
-# use smaller base image
-FROM golang:1.22
+FROM gcr.io/distroless/static:nonroot
+WORKDIR /
 
 COPY --from=builder /gateway /gateway
 COPY --from=builder /go/bin/grpc-health-probe /grpc-health-probe

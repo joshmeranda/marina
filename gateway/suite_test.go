@@ -17,7 +17,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	terminalv1 "github.com/joshmeranda/marina-operator/api/v1"
+	terminalv1 "github.com/joshmeranda/marina/api/v1"
 	//+kubebuilder:scaffold:imports
 )
 

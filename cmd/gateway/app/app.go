@@ -7,7 +7,7 @@ import (
 	"net"
 	"os"
 
-	marinav1 "github.com/joshmeranda/marina-operator/api/v1"
+	marinav1 "github.com/joshmeranda/marina/api/v1"
 	marinagateway "github.com/joshmeranda/marina/gateway"
 	authapis "github.com/joshmeranda/marina/gateway/api/auth"
 	"github.com/joshmeranda/marina/gateway/drivers/auth"

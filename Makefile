@@ -26,19 +26,11 @@ ifdef VERBOSE
 	RM += --verbose
 endif
 
-# IMAGE_TAG_BASE defines the docker.io namespace and part of the image name for remote images.
-# This variable is used to construct full image tags for bundle and catalog images.
-#
-# For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
-# marina.io/marina-operator-bundle:$VERSION and marina.io/marina-operator-catalog:$VERSION.
-# IMAGE_TAG_BASE ?= marina.io/marina-operator
 GATEWAY_IMAGE_TAG ?= joshmeranda/marina-gateway:${VERSION}
+OPERATOR_IMAGE_TAG ?= joshmeranda/marina-operator:${VERSION}
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.30.0
-
-# MARINA_OPERATOR_URL is the git repository URL for the marina-operator project.
-MARINA_OPERATOR_URL=git@github.com:joshmeranda/marina-operator.git
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -108,22 +100,31 @@ lint: lint-go lint-helm ## Run all linting.
 
 ##@ Build
 
-.PHONY: marina gateway
+.PHONY: marina gateway operator
 
 marina: ${LOCALBIN}/marina ## Build marina binary.
 ${LOCALBIN}/marina: ./cmd/marina/main.go ${SOURCES}
 	GOBIN=${GOBIN} ${GO_BUILD} -o $@ -ldflags "-X github.com/joshmeranda/marina/cmd/marina.Version=${VERSION}" ./cmd/marina
 
-gateway: ${LOCALBIN}/gateway ## Build marina-gateway binary.
+gateway: ${LOCALBIN}/gateway ## Build gateway binary.
 ${LOCALBIN}/gateway: ./cmd/gateway/main.go ${SOURCES}
 	GOBIN=${GOBIN} ${GO_BUILD} -o $@ -ldflags "-X github.com/joshmeranda/marina/cmd/gateway.Version=${VERSION}" ./cmd/gateway
 
+operator: ${LOCALBIN}/operator ## Build operator binary.
+${LOCALBIN}/operator: ./cmd/operator/main.go ${SOURCES}
+	GOBIN=${GOBIN} ${GO_BUILD} -o $@ -ldflags "-X github.com/joshmeranda/marina/cmd/operator.Version=${VERSION}" ./cmd/operator
+
 ##@ Docker
 
-.PHONY: docker
+.PHONY: docker docker-gateway docker-operator
 
-docker: ## Builder dockeri mage with marina-gateway.
-	docker build --file Dockerfile --tag ${GATEWAY_IMAGE_TAG} .
+docker: docker-gateway docker-operator ## Build all docker images.
+
+docker-operator: ## Builder operator docker image.
+	docker build --file Dockerfile.operator --tag ${OPERATOR_IMAGE_TAG} .
+
+docker-gateway: ## Builder gateway docker image.
+	docker build --file Dockerfile.gateway --tag ${GATEWAY_IMAGE_TAG} .
 
 ##@ Build Dependencies
 
@@ -135,12 +136,3 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
-
-crds: ## Pull crds from the marina-operator project.
-ifdef OPERATOR_VERSION
-	@echo "Pulling crds from ${MARINA_OPERATOR_URL} at tag ${OPERATOR_VERSION}"
-	git clone ${MARINA_OPERATOR_URL} && cd marina-operator && git checkout ${OPERATOR_VERSION} && cp -r config/crd/bases ../crds && cd .. && rm --force --recursive marina-operator
-else
-	@echo "Pulling crds from ${MARINA_OPERATOR_URL}"
-	git clone ${MARINA_OPERATOR_URL} && cp -r marina-operator/config/crd/bases crds && rm --force --recursive marina-operator
-endif
