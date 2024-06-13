@@ -1,0 +1,15 @@
+gateway:
+  image:
+    pullPolicy: Always
+
+  service:
+    type: NodePort
+    nodePort: 30303
+
+  ingress:
+    enabled: true
+    className: traefik
+
+operator:
+  image:
+    pullPolicy: Always
