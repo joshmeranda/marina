@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/joshmeranda/marina/gateway/api/core"
 	"github.com/joshmeranda/marina/gateway/api/terminal"
@@ -28,6 +29,9 @@ func create(ctx *cli.Context) error {
 	if _, err := client.CreateTerminal(ctx.Context, &createReq); err != nil {
 		return fmt.Errorf("could not create terminal: %w", err)
 	}
+
+	fmt.Printf("sleeping until pods are ready")
+	time.Sleep(time.Second * 10)
 
 	if err := client.Exec(ctx.Context, createReq.Name); err != nil {
 		return fmt.Errorf("could not access terminal: %w", err)
