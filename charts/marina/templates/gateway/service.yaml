@@ -8,7 +8,9 @@ spec:
   type: {{ .Values.gateway.service.type }}
   ports:
     - port: {{ .Values.gateway.service.port }}
-      targetPort: grpc
+      {{ if .Values.gateway.service.nodePort }}
+      nodePort: {{ .Values.gateway.service.nodePort }}
+      {{- end }}
       protocol: TCP
       name: grpc
   selector:

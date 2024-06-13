@@ -50,6 +50,7 @@ gateway:
   service:
     type: ClusterIP
     port: 8081
+    nodePort: ""
 
   ingress:
     enabled: false

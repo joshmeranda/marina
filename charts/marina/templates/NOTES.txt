@@ -1,9 +1,21 @@
 Marina has been installed!
 
-To login as administrator run:
+{{ if .Values.gateway.service.nodePort }}
+To access marina, please set `MARINA_GATEWAY_ADDRESS={{.Values.gateway.hostname}}:{{.Values.gateway.service.nodePort}}`
+{{ else }}
+To access marina, please set `MARINA_GATEWAY_ADDRESS={{.Values.gateway.hostname}}:{{.Values.gateway.service.port}}`
+{{ end }}
+
+To verify that marina is healthy, run:
 
 ```
-MARINA_GATEWAY_ADDRESS={{.Values.gateway.hostname}}:{{.Values.gateway.service.port}} marina auth login password admin $(kubectl get secret -n {{ .Release.Namespace }} marina-bootstrap-password --template '{{ "{{" }} .data.password {{ "}}" }}' | base64 --decode)
+marina health
+```
+
+To login as administrator, run:
+
+```
+marina auth login password admin $(kubectl get secret -n {{ .Release.Namespace }} marina-bootstrap-password --template '{{ "{{" }} .data.password {{ "}}" }}' | base64 --decode)
 ```
 
 Happy Containering!
