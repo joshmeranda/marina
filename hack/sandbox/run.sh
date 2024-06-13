@@ -24,8 +24,3 @@ done
 helm upgrade --install --create-namespace --namespace marina-system marina "$chart_dir" \
 	--values "$values_file" \
 	--set gateway.service.nodePort=$node_port
-
-until go run "$(dirname $0)/../../cmd/marina/main.go" --address localhost:8081 health; do
-	echo "Waiting for marina to be ready..."
-	sleep 1
-done
