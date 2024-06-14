@@ -9,6 +9,7 @@ import (
 
 // TerminalSpec defines the desired state of Terminal
 type TerminalSpec struct {
+	User  string `json:"user"`
 	Image string `json:"image"`
 }
 

@@ -24,7 +24,7 @@ const (
 
 var (
 	CommonLabels = map[string]string{
-		"app": "marina-terminal",
+		"app.kubernetes.io/managed-by": "marina",
 	}
 )
 
@@ -42,7 +42,11 @@ func deploymentForTerminal(terminal *marinacorev1.Terminal) *appsv1.Deployment {
 		Spec: appsv1.DeploymentSpec{
 			Replicas: ToPtr[int32](1),
 			Selector: &metav1.LabelSelector{
-				MatchLabels: CommonLabels,
+				MatchLabels: map[string]string{
+					"app.kubernetes.io/managed-by": "marina",
+					"terminal.marina.io/name":      terminal.Name,
+					"user.marina.io/username":      terminal.Spec.User,
+				},
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{

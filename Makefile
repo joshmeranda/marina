@@ -9,6 +9,8 @@
 VERSION ?= $(shell hack/version.sh)
 $(info using tag '${VERSION}')
 
+# todo: double check that we have all the necessary kubebuilder recipes
+
 # SOURCES is the list of source files for the project
 SOURCES=go.mod go.sum $(shell find . 	-type f -name '*.go')
 

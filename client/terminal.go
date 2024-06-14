@@ -10,13 +10,13 @@ import (
 
 var _ terminal.TerminalServiceClient = &Client{}
 
-func (c *Client) CreateTerminal(ctx context.Context, req *terminal.TerminalCreateRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	_, err := c.terminalClient.CreateTerminal(ctx, req, opts...)
+func (c *Client) CreateTerminal(ctx context.Context, req *terminal.TerminalCreateRequest, opts ...grpc.CallOption) (*terminal.TerminalCreateResponse, error) {
+	resp, err := c.terminalClient.CreateTerminal(ctx, req, opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	return &empty.Empty{}, nil
+	return resp, nil
 }
 
 func (c *Client) DeleteTerminal(ctx context.Context, req *terminal.TerminalDeleteRequest, opts ...grpc.CallOption) (*empty.Empty, error) {

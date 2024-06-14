@@ -28,7 +28,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TerminalServiceClient interface {
-	CreateTerminal(ctx context.Context, in *TerminalCreateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateTerminal(ctx context.Context, in *TerminalCreateRequest, opts ...grpc.CallOption) (*TerminalCreateResponse, error)
 	DeleteTerminal(ctx context.Context, in *TerminalDeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -40,8 +40,8 @@ func NewTerminalServiceClient(cc grpc.ClientConnInterface) TerminalServiceClient
 	return &terminalServiceClient{cc}
 }
 
-func (c *terminalServiceClient) CreateTerminal(ctx context.Context, in *TerminalCreateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *terminalServiceClient) CreateTerminal(ctx context.Context, in *TerminalCreateRequest, opts ...grpc.CallOption) (*TerminalCreateResponse, error) {
+	out := new(TerminalCreateResponse)
 	err := c.cc.Invoke(ctx, TerminalService_CreateTerminal_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (c *terminalServiceClient) DeleteTerminal(ctx context.Context, in *Terminal
 // All implementations must embed UnimplementedTerminalServiceServer
 // for forward compatibility
 type TerminalServiceServer interface {
-	CreateTerminal(context.Context, *TerminalCreateRequest) (*emptypb.Empty, error)
+	CreateTerminal(context.Context, *TerminalCreateRequest) (*TerminalCreateResponse, error)
 	DeleteTerminal(context.Context, *TerminalDeleteRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedTerminalServiceServer()
 }
@@ -71,7 +71,7 @@ type TerminalServiceServer interface {
 type UnimplementedTerminalServiceServer struct {
 }
 
-func (UnimplementedTerminalServiceServer) CreateTerminal(context.Context, *TerminalCreateRequest) (*emptypb.Empty, error) {
+func (UnimplementedTerminalServiceServer) CreateTerminal(context.Context, *TerminalCreateRequest) (*TerminalCreateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTerminal not implemented")
 }
 func (UnimplementedTerminalServiceServer) DeleteTerminal(context.Context, *TerminalDeleteRequest) (*emptypb.Empty, error) {

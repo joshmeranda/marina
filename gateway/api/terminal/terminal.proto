@@ -8,7 +8,7 @@ import "google/protobuf/empty.proto";
 import "gateway/api/core/core.proto";
 
 service TerminalService {
-    rpc CreateTerminal(TerminalCreateRequest) returns (google.protobuf.Empty) {}
+    rpc CreateTerminal(TerminalCreateRequest) returns (TerminalCreateResponse) {}
 
     rpc DeleteTerminal(TerminalDeleteRequest) returns (google.protobuf.Empty) {}
 }
@@ -20,6 +20,13 @@ message TerminalSpec {
 message TerminalCreateRequest {
     core.NamespacedName name = 1;
     TerminalSpec spec = 2;
+}
+
+message TerminalCreateResponse {
+    // todo: might be best to store this in terminal status?
+    core.NamespacedName pod = 1;
+    bytes token = 2;
+    string host = 3;
 }
 
 message TerminalDeleteRequest {
