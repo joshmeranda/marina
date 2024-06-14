@@ -3,6 +3,7 @@
 source "$(dirname $0)/.env"
 
 values_file="$(dirname $0)/values.yaml"
+generated_values_file="$(dirname $0)/generated-values.yaml"
 chart_dir="$(dirname $0)/../../charts/marina"
 
 port_ceil=$((32767 + 1))
@@ -14,13 +15,14 @@ if k3d cluster list $K3D_CLUSTER_NAME &> /dev/null; then
 	exit 1
 fi
 
-k3d cluster create --image $K3S_IMAGE $K3D_CLUSTER_NAME --port "8081:$node_port@loadbalancer"
+k3d cluster create --image $K3S_IMAGE $K3D_CLUSTER_NAME --port "8081:$node_port@loadbalancer" --port '80:80@loadbalancer'
 
 until kubectl cluster-info &> /dev/null ; do
 	echo "Waiting for cluster to be ready..."
 	sleep 1
 done
 
+yq eval ".gateway.service.nodePort = $node_port" "$values_file" > "$generated_values_file"
+
 helm upgrade --install --create-namespace --namespace marina-system marina "$chart_dir" \
-	--values "$values_file" \
-	--set gateway.service.nodePort=$node_port
+	--values "$generated_values_file"
