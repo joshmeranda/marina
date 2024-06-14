@@ -50,7 +50,11 @@ func deploymentForTerminal(terminal *marinacorev1.Terminal) *appsv1.Deployment {
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: CommonLabels,
+					Labels: map[string]string{
+						"app.kubernetes.io/managed-by": "marina",
+						"terminal.marina.io/name":      terminal.Name,
+						"user.marina.io/username":      terminal.Spec.User,
+					},
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{

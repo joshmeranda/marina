@@ -63,6 +63,11 @@ func (g *Gateway) ensureAdminRole(ctx context.Context) error {
 				Resources: []string{"deployments"},
 				Verbs:     []string{"create", "delete", "get"},
 			},
+			{
+				APIGroups: []string{""},
+				Resources: []string{"pods"},
+				Verbs:     []string{"get", "list", "watch"},
+			},
 		},
 	}
 
