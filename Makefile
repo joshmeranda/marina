@@ -75,12 +75,20 @@ clean: ## Clean up build artifacts
 ##@ Development
 
 PROTOS=$(shell find gateway/api -type f -name '*.proto')
-.PHOTO: proto-generate
+.PHONY: proto-generate
 proto-generate: ## Generate grpc protobuf api code.
 	protoc -I=. \
 		--go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 		${PROTOS}
+
+.PHONY: manifests
+manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+
+.PHONY: generate
+generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 .PHONY: fmt
 fmt: ## Run go fmt against code.
@@ -122,6 +130,10 @@ ${LOCALBIN}/operator: ./cmd/operator/main.go ${SOURCES}
 
 docker: docker-gateway docker-operator ## Build all docker images.
 
+docker-push: docker ## Build and push all docker image
+	docker push ${GATEWAY_IMAGE_TAG}
+	docker push ${OPERATOR_IMAGE_TAG}
+
 docker-operator: ## Builder operator docker image.
 	docker build --file Dockerfile.operator --tag ${OPERATOR_IMAGE_TAG} .
 
@@ -132,9 +144,19 @@ docker-gateway: ## Builder gateway docker image.
 
 ## Tool Binaries
 ENVTEST ?= $(LOCALBIN)/setup-envtest
+CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen-$(CONTROLLER_TOOLS_VERSION)
 
 ## Tool Versions
+ENVTEST_VERSION ?= release-0.18
+CONTROLLER_TOOLS_VERSION ?= v0.15.0
+
 .PHONY: envtest
-envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
+envtest: $(ENVTEST) ## Download setup-envtest locally if necessary.
 $(ENVTEST): $(LOCALBIN)
-	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@$(ENVTEST_VERSION)
+
+.PHONY: controller-gen
+controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
+$(CONTROLLER_GEN): $(LOCALBIN)
+	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
+	mv $(LOCALBIN)/controller-gen $(CONTROLLER_GEN)
