@@ -15,7 +15,9 @@ if k3d cluster list $K3D_CLUSTER_NAME &> /dev/null; then
 	exit 1
 fi
 
-k3d cluster create --image $K3S_IMAGE $K3D_CLUSTER_NAME --port "8081:$node_port@loadbalancer" --port '80:80@loadbalancer'
+k3d cluster create --image $K3S_IMAGE $K3D_CLUSTER_NAME \
+	--port "8081:$node_port@loadbalancer" --port '80:80@loadbalancer' \
+	--k3s-arg '--disable=traefik@server:0'
 
 until kubectl cluster-info &> /dev/null ; do
 	echo "Waiting for cluster to be ready..."
