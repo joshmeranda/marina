@@ -41,8 +41,11 @@ spec:
             properties:
               image:
                 type: string
+              user:
+                type: string
             required:
             - image
+            - user
             type: object
           status:
             description: TerminalStatus defines the observed state of Terminal

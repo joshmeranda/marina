@@ -21,6 +21,9 @@ rules:
   resources: ["serviceaccounts"]
   verbs: ["impersonate"]
 - apiGroups: [""]
+  resources: ["serviceaccounts/token"]
+  verbs: ["get"]
+- apiGroups: [""]
   resources: ["pods"]
   verbs: ["get", "list", "watch"]
 ---

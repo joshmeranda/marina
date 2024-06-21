@@ -23,10 +23,9 @@ message TerminalCreateRequest {
 }
 
 message TerminalCreateResponse {
-    // todo: might be best to store this in terminal status?
+    // todo: might be better to store this in terminal status?
     core.NamespacedName pod = 1;
-    bytes token = 2;
-    string host = 3;
+    string token = 2;
 }
 
 message TerminalDeleteRequest {

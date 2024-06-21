@@ -16,6 +16,7 @@ if k3d cluster list $K3D_CLUSTER_NAME &> /dev/null; then
 fi
 
 k3d cluster create --image $K3S_IMAGE $K3D_CLUSTER_NAME \
+	--api-port 6443 \
 	--port "8081:$node_port@loadbalancer" --port '80:80@loadbalancer' \
 	--k3s-arg '--disable=traefik@server:0'
 

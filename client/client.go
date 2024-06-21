@@ -40,7 +40,7 @@ func NewClient(conn grpc.ClientConnInterface, logger *slog.Logger) *Client {
 }
 
 // todo: https://docs.armory.io/continuous-deployment/armory-admin/manual-service-account/
-func (c *Client) Exec(ctx context.Context, pod *core.NamespacedName, terminal *core.NamespacedName) error {
+func (c *Client) Exec(ctx context.Context, bearerToken string, pod *core.NamespacedName, terminal *core.NamespacedName) error {
 	// todo: receive kubeconfig from gateway rather than relying on local kubeconfig
 	// todo: access with pod exec rather than sub-process
 	//
@@ -100,8 +100,7 @@ func (c *Client) Exec(ctx context.Context, pod *core.NamespacedName, terminal *c
 	//
 	// return nil
 
-	var bearerToken string
-	var host string
+	host := "https://localhost:6443"
 
 	config := &rest.Config{
 		BearerToken: bearerToken,

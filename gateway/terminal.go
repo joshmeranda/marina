@@ -6,6 +6,7 @@ import (
 	"time"
 
 	marinav1 "github.com/joshmeranda/marina/api/v1"
+	authenticationv1 "k8s.io/api/authentication/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -63,10 +64,41 @@ func (g *Gateway) getPodForTerminal(ctx context.Context, kubeClient client.Clien
 	return &podList.Items[0], nil
 }
 
+func (g *Gateway) getExecTokenForTerminal(ctx context.Context, kubeClient client.Client, t *marinav1.Terminal) (string, error) {
+	tokenRequest := &authenticationv1.TokenRequest{
+		// todo: we will to add eithe rexpiration or bind this to a secret to limit the token's lifetime
+		// Spec: authenticationv1.TokenRequestSpec{
+		// 	Audiences: []string{"system:serviceaccount:" + terminal.Namespace + ":" + terminal.Name},
+		// 	BoundObjectRef: &authenticationv1.BoundObjectReference{
+		// 		Kind:       terminal.Kind,
+		// 		APIVersion: terminal.APIVersion,
+		// 		Name:       terminal.Name,
+		// 		UID:        terminal.UID,
+		// 	},
+		// },
+	}
+
+	sa := &corev1.ServiceAccount{}
+	if err := kubeClient.Get(ctx, client.ObjectKey{Namespace: t.Namespace, Name: t.Spec.User}, sa); err != nil {
+		return "", fmt.Errorf("could not fetch service account: %w", err)
+	}
+
+	if err := g.kubeClient.SubResource("token").Create(ctx, sa, tokenRequest); err != nil {
+		return "", fmt.Errorf("could not create token: %w", err)
+	}
+
+	return tokenRequest.Status.Token, nil
+}
+
 func (g *Gateway) CreateTerminal(ctx context.Context, req *terminal.TerminalCreateRequest) (*terminal.TerminalCreateResponse, error) {
 	kubeClient, err := g.clientFromContext(ctx, client.Options{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to impersonate user: %w", err)
+	}
+
+	user, err := userFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user from context: %w", err)
 	}
 
 	t := marinav1.Terminal{
@@ -76,6 +108,7 @@ func (g *Gateway) CreateTerminal(ctx context.Context, req *terminal.TerminalCrea
 		},
 		Spec: marinav1.TerminalSpec{
 			Image: req.Spec.Image,
+			User:  user,
 		},
 	}
 
@@ -88,13 +121,17 @@ func (g *Gateway) CreateTerminal(ctx context.Context, req *terminal.TerminalCrea
 		return nil, fmt.Errorf("failed to fetch pod for terminal: %w", err)
 	}
 
+	token, err := g.getExecTokenForTerminal(ctx, kubeClient, &t)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch exec token for terminal: %w", err)
+	}
+
 	return &terminal.TerminalCreateResponse{
 		Pod: &core.NamespacedName{
 			Name:      pod.Name,
 			Namespace: pod.Namespace,
 		},
-		Host:  "localhost:6443",
-		Token: []byte{},
+		Token: token,
 	}, nil
 }
 

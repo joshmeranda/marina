@@ -11,19 +11,32 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (g *Gateway) clientFromContext(ctx context.Context, opts client.Options) (client.Client, error) {
+func userFromContext(ctx context.Context) (string, error) {
 	foundUsers := metadata.ValueFromIncomingContext(ctx, UserMetadataFieldName)
-	config := rest.CopyConfig(g.kubeConfig)
 
 	if len(foundUsers) > 1 {
-		return nil, fmt.Errorf("bug: could not get user from context: multiple authenticated users")
+		return "", fmt.Errorf("bug: could not get user from context: multiple authenticated users")
 	}
 
 	if len(foundUsers) == 0 {
+		return "admin", nil
+	}
+
+	return foundUsers[0], nil
+}
+
+func (g *Gateway) clientFromContext(ctx context.Context, opts client.Options) (client.Client, error) {
+	user, err := userFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user from context: %w", err)
+	}
+
+	if user == "admin" {
 		return g.kubeClient, nil
 	}
 
-	config.Impersonate.UserName = fmt.Sprintf("system:serviceaccount:%s:%s", g.namespace, foundUsers[0])
+	config := rest.CopyConfig(g.kubeConfig)
+	config.Impersonate.UserName = fmt.Sprintf("system:serviceaccount:%s:%s", g.namespace, user)
 
 	if opts.Scheme == nil {
 		schema := scheme.Scheme

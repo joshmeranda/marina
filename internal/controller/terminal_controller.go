@@ -102,8 +102,11 @@ type TerminalReconciler struct {
 // +kubebuilder:rbac:groups=core.marina.io,resources=terminals,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core.marina.io,resources=terminals/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=core.marina.io,resources=terminals/finalizers,verbs=update
+// +kubebuilder:rbac:groups=*,resources=serviceaccounts/token,verbs=create
 // +kubebuilder:rbac:groups=*,resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=*,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+
+// todo: a lot of dupliacted reconcileCode here, could be merged
 
 func (r *TerminalReconciler) reconcileDeployment(ctx context.Context, terminal *marinacorev1.Terminal) error {
 	logger := log.FromContext(ctx)
@@ -165,7 +168,7 @@ func (r *TerminalReconciler) reconcileService(ctx context.Context, terminal *mar
 
 func (r *TerminalReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-	logger.Info("reconciling terminal", "temrinal", req.NamespacedName)
+	logger.Info("reconciling terminal", "terminal", req.NamespacedName)
 
 	terminal := &marinacorev1.Terminal{}
 	if err := r.Get(ctx, req.NamespacedName, terminal); err != nil {
