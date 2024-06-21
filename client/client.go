@@ -40,7 +40,7 @@ func NewClient(conn grpc.ClientConnInterface, logger *slog.Logger) *Client {
 }
 
 // todo: https://docs.armory.io/continuous-deployment/armory-admin/manual-service-account/
-func (c *Client) Exec(ctx context.Context, bearerToken string, pod *core.NamespacedName, terminal *core.NamespacedName) error {
+func (c *Client) Exec(ctx context.Context, config *rest.Config, pod *core.NamespacedName, terminal *core.NamespacedName) error {
 	// todo: receive kubeconfig from gateway rather than relying on local kubeconfig
 	// todo: access with pod exec rather than sub-process
 	//
@@ -100,16 +100,9 @@ func (c *Client) Exec(ctx context.Context, bearerToken string, pod *core.Namespa
 	//
 	// return nil
 
-	host := "https://localhost:6443"
-
-	config := &rest.Config{
-		BearerToken: bearerToken,
-		Host:        host,
-	}
-
 	client, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return fmt.Errorf("failed to create pod from bearer token: %w", err)
+		return fmt.Errorf("failed to create client: %w", err)
 	}
 
 	req := client.CoreV1().RESTClient().Post().Resource("pods").Namespace(pod.Namespace).Name(pod.Name).SubResource("exec")

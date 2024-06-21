@@ -8,12 +8,12 @@ import (
 	"github.com/joshmeranda/marina/gateway/api/terminal"
 	"github.com/joshmeranda/marina/kubeconfig"
 	"github.com/urfave/cli/v2"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func getExecKubeconfig(token string) (client.Client, error) {
+func getExecClient(token string) (*rest.Config, error) {
 	kubeString, err := kubeconfig.ForTokenBased("marina-exec", "", "https://rancher.local.com:6443", token)
 	if err != nil {
 		return nil, fmt.Errorf("could not create client from kubeconfig: %w", err)
@@ -28,12 +28,7 @@ func getExecKubeconfig(token string) (client.Client, error) {
 		return nil, fmt.Errorf("could not create client from kubeconfig: %w", err)
 	}
 
-	client, err := client.New(config, client.Options{})
-	if err != nil {
-		return nil, fmt.Errorf("could not create client from kubeconfig: %w", err)
-	}
-
-	return client, nil
+	return config, nil
 }
 
 func create(ctx *cli.Context) error {
@@ -57,7 +52,12 @@ func create(ctx *cli.Context) error {
 		return fmt.Errorf("could not create terminal: %w", err)
 	}
 
-	if err := client.Exec(ctx.Context, createResp.Token, createResp.Pod, createReq.Name); err != nil {
+	config, err := getExecClient(createResp.Token)
+	if err != nil {
+		return fmt.Errorf("could not create kubeconfig: %w", err)
+	}
+
+	if err := client.Exec(ctx.Context, config, createResp.Pod, createReq.Name); err != nil {
 		return fmt.Errorf("could not access terminal: %w", err)
 	}
 
