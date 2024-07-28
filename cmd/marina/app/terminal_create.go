@@ -14,12 +14,14 @@ import (
 )
 
 func getExecClient(token string) (*rest.Config, error) {
-	kubeString, err := kubeconfig.ForTokenBased("marina-exec", "", "https://rancher.local.com:6443", token)
-	if err != nil {
-		return nil, fmt.Errorf("could not create client from kubeconfig: %w", err)
-	}
-
 	getter := func() (*api.Config, error) {
+		kubeString, err := kubeconfig.ForTokenBased("marina-exec", "", "localhost:6443", token)
+		if err != nil {
+			return nil, fmt.Errorf("could not create client from kubeconfig: %w", err)
+		}
+
+		fmt.Println(kubeString)
+
 		return clientcmd.Load([]byte(kubeString))
 	}
 

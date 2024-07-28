@@ -14,7 +14,6 @@ clusters:
     certificate-authority-data: "{{.Cert}}"
 {{- end }}
 {{- end}}
-
 users:
 - name: "{{.User}}"
   user:
@@ -32,7 +31,6 @@ users:
 {{- end }}
       command: rancher
 {{- end }}
-
 contexts:
 {{- range .Nodes}}
 - name: "{{.ClusterName}}"

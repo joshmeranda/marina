@@ -66,7 +66,7 @@ func (g *Gateway) getPodForTerminal(ctx context.Context, kubeClient client.Clien
 
 func (g *Gateway) getExecTokenForTerminal(ctx context.Context, kubeClient client.Client, t *marinav1.Terminal) (string, error) {
 	tokenRequest := &authenticationv1.TokenRequest{
-		// todo: we will to add eithe rexpiration or bind this to a secret to limit the token's lifetime
+		// todo: we will to add either expiration or bind this to a secret to limit the token's lifetime
 		// Spec: authenticationv1.TokenRequestSpec{
 		// 	Audiences: []string{"system:serviceaccount:" + terminal.Namespace + ":" + terminal.Name},
 		// 	BoundObjectRef: &authenticationv1.BoundObjectReference{
