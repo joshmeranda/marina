@@ -25,7 +25,7 @@ message TerminalCreateRequest {
 message TerminalCreateResponse {
     // todo: might be better to store this in terminal status?
     core.NamespacedName pod = 1;
-    string token = 2;
+    string kubeconfig = 2;
 }
 
 message TerminalDeleteRequest {

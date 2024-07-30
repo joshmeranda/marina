@@ -6,22 +6,15 @@ import (
 
 	"github.com/joshmeranda/marina/gateway/api/core"
 	"github.com/joshmeranda/marina/gateway/api/terminal"
-	"github.com/joshmeranda/marina/kubeconfig"
 	"github.com/urfave/cli/v2"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
-func getExecClient(token string) (*rest.Config, error) {
+func getExecClient(kubeString string) (*rest.Config, error) {
 	getter := func() (*api.Config, error) {
-		kubeString, err := kubeconfig.ForTokenBased("marina-exec", "", "localhost:6443", token)
-		if err != nil {
-			return nil, fmt.Errorf("could not create client from kubeconfig: %w", err)
-		}
-
 		fmt.Println(kubeString)
-
 		return clientcmd.Load([]byte(kubeString))
 	}
 
@@ -54,7 +47,7 @@ func create(ctx *cli.Context) error {
 		return fmt.Errorf("could not create terminal: %w", err)
 	}
 
-	config, err := getExecClient(createResp.Token)
+	config, err := getExecClient(createResp.Kubeconfig)
 	if err != nil {
 		return fmt.Errorf("could not create kubeconfig: %w", err)
 	}

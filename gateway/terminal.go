@@ -6,6 +6,7 @@ import (
 	"time"
 
 	marinav1 "github.com/joshmeranda/marina/api/v1"
+	"github.com/joshmeranda/marina/gateway/kubeconfig"
 	authenticationv1 "k8s.io/api/authentication/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -126,12 +127,18 @@ func (g *Gateway) CreateTerminal(ctx context.Context, req *terminal.TerminalCrea
 		return nil, fmt.Errorf("failed to fetch exec token for terminal: %w", err)
 	}
 
+	// todo: figure out how to specify the k8s host
+	kubecfg, err := kubeconfig.ForTokenBased("marina-exec", "localhost:6443", token)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create kubeconfig: %w", err)
+	}
+
 	return &terminal.TerminalCreateResponse{
 		Pod: &core.NamespacedName{
 			Name:      pod.Name,
 			Namespace: pod.Namespace,
 		},
-		Token: token,
+		Kubeconfig: kubecfg,
 	}, nil
 }
 
