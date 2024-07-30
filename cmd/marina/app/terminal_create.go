@@ -14,7 +14,6 @@ import (
 
 func getExecClient(kubeString string) (*rest.Config, error) {
 	getter := func() (*api.Config, error) {
-		fmt.Println(kubeString)
 		return clientcmd.Load([]byte(kubeString))
 	}
 

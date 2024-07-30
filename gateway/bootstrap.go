@@ -49,11 +49,6 @@ func (g *Gateway) ensureAdminRole(ctx context.Context) error {
 				Verbs:     []string{"create", "delete", "get", "list", "update", "watch"},
 			},
 			{
-				APIGroups: []string{""},
-				Resources: []string{"secrets"},
-				Verbs:     []string{"create", "delete", "get"},
-			},
-			{
 				APIGroups: []string{"rbac.authorization.k8s.io"},
 				Resources: []string{"roles", "rolebindings"},
 				Verbs:     []string{"create", "delete", "get"},
@@ -67,6 +62,11 @@ func (g *Gateway) ensureAdminRole(ctx context.Context) error {
 				APIGroups: []string{""},
 				Resources: []string{"pods"},
 				Verbs:     []string{"get", "list", "watch"},
+			},
+			{
+				APIGroups: []string{""},
+				Resources: []string{"pods/exec"},
+				Verbs:     []string{"create"},
 			},
 			{
 				APIGroups: []string{""},
