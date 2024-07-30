@@ -34,6 +34,7 @@ type customDataClaims struct {
 
 func (g *Gateway) TokenAuthInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+		// check for unauthenticated endpoints
 		switch info.FullMethod {
 		case "/auth.AuthService/Login", "/grpc.health.v1.Health/Check":
 			resp, err := handler(ctx, req)
@@ -125,8 +126,6 @@ func (g *Gateway) Login(ctx context.Context, req *auth.LoginRequest) (*auth.Logi
 	if err := g.authDriver.Authenticate(ctx, req); err != nil {
 		return nil, fmt.Errorf("could not authenticate user '%s': %w", req.User, err)
 	}
-
-	// todo: deal with access list stuff (might not really need it)
 
 	bearerToken, err := g.generateTokenForUser(ctx, req.User)
 	if err != nil {

@@ -113,7 +113,6 @@ gateway:
 
   affinity: {}
 
-# todo: operator valuse can be simplified
 operator:
   replicaCount: 1
 
