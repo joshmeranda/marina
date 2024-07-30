@@ -24,8 +24,6 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-// todo: allow login for multiple users (see kubeconfig for example)
-
 var _ = Describe("User Updating Another User", Ordered, func() {
 	var ctx context.Context
 	var cancel context.CancelCauseFunc

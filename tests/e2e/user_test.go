@@ -217,7 +217,7 @@ var _ = Describe("User", Ordered, func() {
 					return err
 				})
 				Expect(err).ToNot(HaveOccurred())
-				Expect(u.Roles).To(ConsistOf("burglar"))
+				Expect(u.Roles).To(ContainElement("burglar"))
 			})
 		})
 

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	terminalv1 "github.com/joshmeranda/marina/api/v1"
+	marainaapiv1 "github.com/joshmeranda/marina/api/v1"
 	marinaclient "github.com/joshmeranda/marina/client"
 	gatewayapp "github.com/joshmeranda/marina/cmd/gateway/app"
 	marinapp "github.com/joshmeranda/marina/cmd/marina/app"
@@ -39,9 +39,9 @@ var (
 	k8sClient client.Client
 	testEnv   *envtest.Environment
 
-	clientApp cli.App
-	serverApp cli.App
-	marinaApp cli.App
+	clientApp   cli.App
+	serverApp   cli.App
+	operatorApp cli.App
 
 	testDir        string
 	kubeconfigPath string
@@ -66,7 +66,7 @@ func TestE2E(t *testing.T) {
 var _ = BeforeSuite(func() {
 	clientApp = marinapp.App()
 	serverApp = gatewayapp.App()
-	marinaApp = operatorapp.App()
+	operatorApp = operatorapp.App()
 
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
@@ -81,7 +81,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = terminalv1.AddToScheme(scheme.Scheme)
+	err = marainaapiv1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
@@ -184,7 +184,7 @@ func runOperatorWithArgs(ctx context.Context, args []string) {
 	}, args...)
 
 	By("by starting marina operator")
-	err := marinaApp.RunContext(ctx, args)
+	err := operatorApp.RunContext(ctx, args)
 	Expect(err).ToNot(HaveOccurred())
 }
 

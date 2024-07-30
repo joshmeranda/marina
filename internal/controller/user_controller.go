@@ -46,7 +46,7 @@ func selfRoleForUser(user *marinacorev1.User) *rbacv1.Role {
 			{
 				APIGroups:     []string{"core.marina.io"},
 				Resources:     []string{"users"},
-				Verbs:         []string{"get", "list", "watch"},
+				Verbs:         []string{"get", "list", "watch", "update"},
 				ResourceNames: []string{user.Name},
 			},
 			{
