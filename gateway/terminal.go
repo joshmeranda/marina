@@ -62,6 +62,26 @@ func (g *Gateway) getPodForTerminal(ctx context.Context, kubeClient client.Clien
 		return nil, fmt.Errorf("expected 1 pod, got %d", len(podList.Items))
 	}
 
+	execPod := podList.Items[0]
+
+	condition = func(ctx context.Context) (bool, error) {
+		if err := kubeClient.Get(ctx, client.ObjectKeyFromObject(&execPod), &execPod); err != nil {
+			g.logger.Warn("could not get pod for terminal, retrying", "err", err)
+			return false, nil
+		}
+
+		if execPod.Status.Phase != corev1.PodRunning {
+			g.logger.Warn("pod is not running, retrying...")
+			return false, nil
+		}
+
+		return true, nil
+	}
+
+	if err := wait.ExponentialBackoffWithContext(ctx, backoff, condition); err != nil {
+		return nil, fmt.Errorf("failed to get pod for terminal: %w", err)
+	}
+
 	return &podList.Items[0], nil
 }
 
