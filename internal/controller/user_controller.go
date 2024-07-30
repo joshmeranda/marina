@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -21,6 +22,9 @@ const (
 	UserServiceAccountFinalizer = "marina.io.serviceaccount/finalizer"
 	UserRoleBindingFinalizer    = "marina.io.rolebinding/finalizer"
 	UserSelfRoleFinalizerFormat = "marina.io.selfrole.%s/finalizer"
+
+	UserRoleBindingLabelUser = "app.marina.io/user"
+	UserRoleBindingLabelRole = "app.marina.io/role"
 )
 
 func serviceAccountForUser(user *marinacorev1.User) *corev1.ServiceAccount {
@@ -59,6 +63,10 @@ func userRoleBindingForRole(user *marinacorev1.User, role string) *rbacv1.RoleBi
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      user.Name + "-" + role,
 			Namespace: user.Namespace,
+			Labels: map[string]string{
+				UserRoleBindingLabelUser: user.Name,
+				UserRoleBindingLabelRole: role,
+			},
 		},
 		Subjects: []rbacv1.Subject{
 			{
@@ -116,37 +124,83 @@ func (r *UserReconciler) reconcileServiceAccount(ctx context.Context, user *mari
 	return nil
 }
 
+func (r *UserReconciler) reconcileNewRoles(ctx context.Context, user *marinacorev1.User, existingBindings *rbacv1.RoleBindingList) error {
+	logger := log.FromContext(ctx)
+	newRoles := []string{}
+
+	for _, role := range user.Spec.Roles {
+		if !slices.ContainsFunc(existingBindings.Items, func(binding rbacv1.RoleBinding) bool { return binding.Labels[UserRoleBindingLabelRole] == role }) {
+			newRoles = append(newRoles, role)
+		}
+	}
+
+	for _, role := range newRoles {
+		binding := userRoleBindingForRole(user, role)
+
+		if err := r.Create(ctx, binding); err != nil {
+			return client.IgnoreAlreadyExists(err)
+		}
+
+		logger.Info("created role binding", "rolebinding", client.ObjectKeyFromObject(binding))
+	}
+
+	return nil
+}
+
+func (r *UserReconciler) reconcileRemovedRoles(ctx context.Context, user *marinacorev1.User, existingBindings *rbacv1.RoleBindingList) error {
+	logger := log.FromContext(ctx)
+	removedRoles := []*rbacv1.RoleBinding{}
+
+	for _, binding := range existingBindings.Items {
+		if !slices.Contains(user.Spec.Roles, binding.Labels[UserRoleBindingLabelRole]) {
+			removedRoles = append(removedRoles, &binding)
+		}
+	}
+
+	for _, role := range removedRoles {
+		if err := r.Delete(ctx, role); err != nil {
+			logger.Error(err, "error deleting role binding", "rolebinding", client.ObjectKeyFromObject(role))
+			return err
+		}
+
+		logger.Info("deleted role binding", "rolebinding", client.ObjectKeyFromObject(role))
+	}
+
+	return nil
+}
+
 func (r *UserReconciler) reconcileRoleBindings(ctx context.Context, user *marinacorev1.User) error {
 	logger := log.FromContext(ctx)
 	isDeleting := user.GetDeletionTimestamp() != nil
 
-	if !isDeleting {
-		_ = controllerutil.AddFinalizer(user, UserRoleBindingFinalizer)
-	}
-
-	for _, role := range user.Spec.Roles {
-		binding := userRoleBindingForRole(user, role)
-
-		if isDeleting {
-			if controllerutil.ContainsFinalizer(user, UserRoleBindingFinalizer) {
-				if err := r.Delete(ctx, binding); err != nil {
-					logger.Error(err, "error deleting role binding", "rolebinding", client.ObjectKeyFromObject(binding))
-					return err
-				}
-
-				logger.Info("deleted role binding", "rolebinding", client.ObjectKeyFromObject(binding))
-			}
-		} else {
-			// assumed roles are validated before we reach this point
-			if err := r.Create(ctx, binding); err != nil {
-				return client.IgnoreAlreadyExists(err)
-			}
-			logger.Info("created role binding", "rolebinding", client.ObjectKeyFromObject(binding))
-		}
+	existingBindings := rbacv1.RoleBindingList{}
+	if err := r.List(ctx, &existingBindings, client.InNamespace(user.Namespace), client.MatchingLabels{UserRoleBindingLabelUser: user.Name}); err != nil {
+		logger.Error(err, "failed to list user role bindings", "user", client.ObjectKeyFromObject(user))
+		return err
 	}
 
 	if isDeleting {
+		for _, binding := range existingBindings.Items {
+			if err := r.Delete(ctx, &binding); err != nil {
+				logger.Error(err, "failed to delete role binding", "rolebinding", client.ObjectKeyFromObject(&binding))
+				return nil
+			}
+		}
 		_ = controllerutil.RemoveFinalizer(user, UserRoleBindingFinalizer)
+
+		return nil
+	}
+
+	_ = controllerutil.AddFinalizer(user, UserRoleBindingFinalizer)
+
+	if err := r.reconcileNewRoles(ctx, user, &existingBindings); err != nil {
+		logger.Error(err, "failed to reconcile new roles", "user", client.ObjectKeyFromObject(user))
+		return err
+	}
+
+	if err := r.reconcileRemovedRoles(ctx, user, &existingBindings); err != nil {
+		logger.Error(err, "failed to reconcile removed roles", "user", client.ObjectKeyFromObject(user))
+		return err
 	}
 
 	return nil

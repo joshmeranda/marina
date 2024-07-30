@@ -42,8 +42,6 @@ func TestControllers(t *testing.T) {
 		suiteConfig.FocusFiles = strings.Split(focusStrings, ",")
 	}
 
-	fmt.Printf("=== [TestControllers] 000 '%s' ===\n", os.Getenv("KUBEBUILDER_ASSETS"))
-
 	RunSpecs(t, "Controller Suite", suiteConfig, reporterConfig)
 }
 
