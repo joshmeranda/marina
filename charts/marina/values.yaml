@@ -17,6 +17,36 @@ serviceAccount:
     # Specifies whether RBAC resources should be created for the serviceaccount
     create: true
 
+terminal:
+  # In some cases you will need to enforce blocked and allowed images to conform to organization policies, or minimize
+  # CVEs. Specify those in the fields below. Both blocked and allowed are not mutually exclusive, but if used together
+  # can create more complexity than what is typically requried. If an image matches both blocked and allowed it will be
+  # blocked.We recommaned using one or the other.
+  #
+  # If any of the fields are left empty, it will match any value. For example, the image matcher:
+  # - registry: ""
+  #   repository: "namespace/name"
+  #   tag: ""
+  #   sha: ""
+  # would match any image from the "namespace/name" repository, regardless of the registry, tag, or sha.
+  # 
+  # images:
+  #   blocked:
+  #     - registry: ""
+  #       repository: ""
+  #       tag: ""
+  #       sha: ""
+  #   allowed:
+  #     - registry: ""
+  #       repository: ""
+  #       tag: ""
+  #       sha: ""
+  images:
+    blocked:
+      - tag: latest
+    allowed:
+      - repository: library/busybox
+
 gateway:
   # Fully qualified hostname for the gateway
   hostname: ""

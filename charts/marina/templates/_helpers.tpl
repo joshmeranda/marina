@@ -83,3 +83,23 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Conform an image ref to the string format expected by the gateway.
+*/}}
+{{- define "toReference" -}}
+{{- $ref := "" }}
+{{- if .registry -}}
+{{ $ref = printf "%s/" .registry }}
+{{- end -}}
+{{- if .repository -}}
+{{ $ref = printf "%s%s" $ref .repository }}
+{{- end -}}
+{{- if .tag -}}
+{{ $ref = printf "%s:%s" $ref .tag }}
+{{- end -}}
+{{- if .sha -}}
+{{ $ref = printf "%s@sha256:%s" $ref .sha }}
+{{- end -}}
+{{- $ref | quote -}}
+{{- end -}}

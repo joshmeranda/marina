@@ -56,6 +56,15 @@ spec:
           {{- end }}
           # todo: support new namespaces, etc
           command: ["/gateway"]
+          args:
+          {{- range .Values.terminal.images.blocked }}
+          - "--block-image"
+          - {{ include "toReference" . }}
+          {{ end }}
+          {{- range .Values.terminal.images.allowed -}}
+          - "--allow-image"
+          - {{ include "toReference" . }}
+          {{- end -}}
       {{- with .Values.gateway.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
