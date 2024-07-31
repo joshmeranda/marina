@@ -4,6 +4,7 @@ import (
 	"log/slog"
 
 	"github.com/joshmeranda/marina/gateway/drivers/auth"
+	"github.com/joshmeranda/marina/gateway/images"
 	"k8s.io/client-go/rest"
 )
 
@@ -30,5 +31,11 @@ func WithNamespace(namespace string) Option {
 func WithAuthDriver(driver auth.Driver) Option {
 	return func(g *Gateway) {
 		g.authDriver = driver
+	}
+}
+
+func WithAccessList(imagesAccessList images.ImagesAccessList) Option {
+	return func(g *Gateway) {
+		g.imagesAccessList = imagesAccessList
 	}
 }

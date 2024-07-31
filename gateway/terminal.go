@@ -122,6 +122,15 @@ func (g *Gateway) CreateTerminal(ctx context.Context, req *terminal.TerminalCrea
 		return nil, fmt.Errorf("failed to get user from context: %w", err)
 	}
 
+	imageIsAllowed, err := g.imagesAccessList.IsImageAllowed(req.Spec.Image)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check image access: %w", err)
+	}
+
+	if !imageIsAllowed {
+		return nil, fmt.Errorf("image '%s' is not allowed", req.Spec.Image)
+	}
+
 	t := marinav1.Terminal{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      req.Name.Name,

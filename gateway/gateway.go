@@ -11,6 +11,7 @@ import (
 	"github.com/joshmeranda/marina/gateway/api/terminal"
 	"github.com/joshmeranda/marina/gateway/api/user"
 	authdriver "github.com/joshmeranda/marina/gateway/drivers/auth"
+	"github.com/joshmeranda/marina/gateway/images"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
@@ -46,9 +47,10 @@ type Gateway struct {
 	kubeClient client.Client
 	kubeConfig *rest.Config
 
-	logger     *slog.Logger
-	namespace  string
-	authDriver authdriver.Driver
+	logger           *slog.Logger
+	namespace        string
+	authDriver       authdriver.Driver
+	imagesAccessList images.ImagesAccessList
 }
 
 func NewGateway(opts ...Option) (*Gateway, error) {
