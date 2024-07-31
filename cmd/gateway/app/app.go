@@ -11,6 +11,7 @@ import (
 	marinagateway "github.com/joshmeranda/marina/gateway"
 	authapis "github.com/joshmeranda/marina/gateway/api/auth"
 	"github.com/joshmeranda/marina/gateway/drivers/auth"
+	"github.com/joshmeranda/marina/gateway/images"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -20,6 +21,10 @@ import (
 )
 
 var Version string
+
+const (
+	CategoryImageAccessList = "images access list"
+)
 
 func getLogger(ctx *cli.Context) *slog.Logger {
 	var out io.Writer = os.Stdout
@@ -40,6 +45,36 @@ func getLogger(ctx *cli.Context) *slog.Logger {
 	logger := slog.New(slog.NewTextHandler(out, opts))
 
 	return logger
+}
+
+func createaAccessList(ctx *cli.Context) (images.ImagesAccessList, error) {
+	blocked := ctx.StringSlice("block-images")
+	allowed := ctx.StringSlice("allow-images")
+
+	accessList := images.ImagesAccessList{
+		Blocked: make([]images.ImageMatcher, len(blocked)),
+		Allowed: make([]images.ImageMatcher, len(allowed)),
+	}
+
+	for i, b := range blocked {
+		matcher, err := images.ParseMatcher(b)
+		if err != nil {
+			return images.ImagesAccessList{}, fmt.Errorf("failed to parse blocked image matcher: %w", err)
+		}
+
+		accessList.Blocked[i] = matcher
+	}
+
+	for i, a := range allowed {
+		matcher, err := images.ParseMatcher(a)
+		if err != nil {
+			return images.ImagesAccessList{}, fmt.Errorf("failed to parse blocked image matcher: %w", err)
+		}
+
+		accessList.Allowed[i] = matcher
+	}
+
+	return accessList, nil
 }
 
 func start(ctx *cli.Context) error {
@@ -86,11 +121,17 @@ func start(ctx *cli.Context) error {
 		},
 	}
 
+	accessList, err := createaAccessList(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to create access list: %w", err)
+	}
+
 	gateway, err := marinagateway.NewGateway(
 		marinagateway.WithLogger(logger),
 		marinagateway.WithKubeConfig(config),
 		marinagateway.WithNamespace(namespace),
 		marinagateway.WithAuthDriver(&authDriver),
+		marinagateway.WithAccessList(accessList),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create gateway: %w", err)
@@ -158,6 +199,16 @@ func App() cli.App {
 			&cli.BoolFlag{
 				Name:  "verbose",
 				Usage: "run verbosely",
+			},
+			&cli.StringSliceFlag{
+				Name:     "block-images",
+				Usage:    "block images from being used for terminals",
+				Category: CategoryImageAccessList,
+			},
+			&cli.StringSliceFlag{
+				Name:     "allow-images",
+				Usage:    "allow imagesto be used for terminals",
+				Category: CategoryImageAccessList,
 			},
 		},
 		Action: start,
